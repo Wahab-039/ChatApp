@@ -1,0 +1,23 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Go build artifacts
+/chat-app
+*.exe
+*.test
+*.out
+
+# Coverage and profiling output
+coverage.out
+*.coverprofile
+*.prof
+
+# Editor and operating-system files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
