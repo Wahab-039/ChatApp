@@ -8,6 +8,7 @@ import (
 
 	"github.com/Wahab-039/ChatApp/internal/config"
 	"github.com/Wahab-039/ChatApp/internal/database"
+	appmqtt "github.com/Wahab-039/ChatApp/internal/mqtt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,9 +16,10 @@ const databaseStartupTimeout = 5 * time.Second
 
 // Application owns the long-lived resources required to run the API.
 type Application struct {
-	config   *config.Config
-	database *database.Postgres
-	router   *gin.Engine
+	config    *config.Config
+	database  *database.Postgres
+	publisher *appmqtt.Publisher
+	router    *gin.Engine
 }
 
 // New creates the application's long-lived resources and configures its routes.
@@ -30,10 +32,23 @@ func New(cfg *config.Config) (*Application, error) {
 		return nil, fmt.Errorf("connect database: %w", err)
 	}
 
+	publisher, err := appmqtt.Connect(appmqtt.Config{
+		BrokerURL:      cfg.MQTTBrokerURL,
+		Username:       cfg.MQTTServiceUsername,
+		Password:       cfg.MQTTServicePassword,
+		ClientID:       cfg.MQTTClientID,
+		ConnectTimeout: cfg.MQTTConnectTimeout,
+	})
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("connect mqtt: %w", err)
+	}
+
 	return &Application{
-		config:   cfg,
-		database: conn,
-		router:   newRouter(conn, cfg),
+		config:    cfg,
+		database:  conn,
+		publisher: publisher,
+		router:    newRouter(conn, cfg, publisher),
 	}, nil
 }
 
@@ -44,5 +59,8 @@ func (a *Application) Run() error {
 
 // Close releases the application's long-lived resources.
 func (a *Application) Close() {
+	if a.publisher != nil {
+		a.publisher.Close()
+	}
 	a.database.Close()
 }

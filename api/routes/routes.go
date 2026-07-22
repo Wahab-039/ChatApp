@@ -10,8 +10,10 @@ func Register(
 	router *gin.Engine,
 	health *handlers.Health,
 	authHandler *handlers.Auth,
+	messagesHandler *handlers.Messages,
 	limitLogin gin.HandlerFunc,
 	requireAuth gin.HandlerFunc,
+	mqttDev *handlers.MQTTDev,
 ) {
 	router.GET("/health", health.Check)
 
@@ -23,4 +25,10 @@ func Register(
 	protected.Use(requireAuth)
 	protected.GET("/me", authHandler.Me)
 	protected.GET("/users", authHandler.SearchUsers)
+	protected.POST("/messages/direct", messagesHandler.SendDirect)
+	protected.GET("/messages/direct", messagesHandler.ListDirect)
+
+	if mqttDev != nil {
+		protected.POST("/dev/mqtt/ping", mqttDev.Ping)
+	}
 }

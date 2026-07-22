@@ -25,6 +25,12 @@ type Config struct {
 	JWTAccessTTL     time.Duration
 	LoginRateLimit   int
 	LoginRateWindow  time.Duration
+
+	MQTTBrokerURL        string
+	MQTTServiceUsername  string
+	MQTTServicePassword  string
+	MQTTClientID         string
+	MQTTConnectTimeout   time.Duration
 }
 
 // Load reads and validates application configuration from the environment.
@@ -43,6 +49,10 @@ func Load() (*Config, error) {
 	if err != nil || loginRateWindow <= 0 {
 		return nil, errors.New("LOGIN_RATE_WINDOW must be a positive Go duration")
 	}
+	mqttConnectTimeout, err := time.ParseDuration(getEnv("EMQX_CONNECT_TIMEOUT", "10s"))
+	if err != nil || mqttConnectTimeout <= 0 {
+		return nil, errors.New("EMQX_CONNECT_TIMEOUT must be a positive Go duration")
+	}
 
 	cfg := &Config{
 		Environment:      getEnv("APP_ENV", "development"),
@@ -57,6 +67,12 @@ func Load() (*Config, error) {
 		JWTAccessTTL:     jwtAccessTTL,
 		LoginRateLimit:   loginRateLimit,
 		LoginRateWindow:  loginRateWindow,
+
+		MQTTBrokerURL:       normalizeMQTTBrokerURL(getEnv("EMQX_MQTT_TCP_URL", "tcp://localhost:1883")),
+		MQTTServiceUsername: strings.TrimSpace(getEnv("EMQX_SERVICE_USERNAME", "chatapp_service")),
+		MQTTServicePassword: os.Getenv("EMQX_SERVICE_PASSWORD"),
+		MQTTClientID:        strings.TrimSpace(getEnv("EMQX_CLIENT_ID", "chatapp-api-1")),
+		MQTTConnectTimeout:  mqttConnectTimeout,
 	}
 
 	if cfg.DatabaseUser == "" || cfg.DatabasePassword == "" || cfg.DatabaseName == "" {
@@ -65,8 +81,33 @@ func Load() (*Config, error) {
 	if cfg.JWTSecret == "" {
 		return nil, errors.New("JWT_SECRET is required")
 	}
+	if cfg.MQTTServiceUsername == "" {
+		return nil, errors.New("EMQX_SERVICE_USERNAME is required")
+	}
+	if strings.TrimSpace(cfg.MQTTServicePassword) == "" {
+		return nil, errors.New("EMQX_SERVICE_PASSWORD is required")
+	}
+	if cfg.MQTTClientID == "" {
+		return nil, errors.New("EMQX_CLIENT_ID is required")
+	}
+	if cfg.MQTTBrokerURL == "" {
+		return nil, errors.New("EMQX_MQTT_TCP_URL is required")
+	}
 
 	return cfg, nil
+}
+
+// normalizeMQTTBrokerURL maps mqtt:// to tcp:// for Paho.
+func normalizeMQTTBrokerURL(raw string) string {
+	raw = strings.TrimSpace(raw)
+	switch {
+	case strings.HasPrefix(raw, "mqtt://"):
+		return "tcp://" + strings.TrimPrefix(raw, "mqtt://")
+	case strings.HasPrefix(raw, "mqtts://"):
+		return "ssl://" + strings.TrimPrefix(raw, "mqtts://")
+	default:
+		return raw
+	}
 }
 
 // DatabaseURL returns a PostgreSQL connection string for the configured database.

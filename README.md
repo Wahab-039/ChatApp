@@ -1,7 +1,8 @@
 # ChatApp
 
-A Go, Gin, and PostgreSQL backend for a real-time chat application. The current
-milestone provides PostgreSQL-backed user authentication and a health endpoint.
+A Go, Gin, and PostgreSQL backend for a real-time chat application. Authentication
+and user discovery are in place. Realtime delivery uses EMQX (MQTT over
+WebSocket); the Go API remains REST-first for auth and future message persistence.
 
 ## Architecture
 
@@ -33,6 +34,7 @@ internal/app assembles concrete dependencies; main.go creates and runs the app.
 
 - Go 1.26+
 - PostgreSQL 14+
+- Docker and Docker Compose (for EMQX)
 
 ## Configuration
 
@@ -43,10 +45,87 @@ cp .env.example .env
 ```
 
 `JWT_SECRET` must be a long, random value and must not be committed. Access-token
-lifetimes use Go durations, such as `24h` or `30m`.
+lifetimes use Go durations, such as `24h` or `30m`. The same secret is injected
+into EMQX so MQTT clients can authenticate with the login access token.
 
 `LOGIN_RATE_LIMIT` and `LOGIN_RATE_WINDOW` control the process-local login throttle.
 The defaults are 10 login requests per client IP per minute.
+
+`EMQX_SERVICE_PASSWORD` is the broker password for the Go publisher account
+(`chatapp_service`). Keep it secret and out of git.
+
+`EMQX_MQTT_TCP_URL` / `EMQX_CLIENT_ID` configure the API MQTT publisher
+(Phase 2). The API connects to EMQX over MQTT TCP on startup.
+
+## EMQX (Phase 0–2)
+
+Start the broker:
+
+```sh
+docker compose up -d emqx
+./scripts/emqx-bootstrap-service-user.sh
+```
+
+Endpoints:
+
+| Purpose | URL |
+|---|---|
+| MQTT over WebSocket | `ws://localhost:8083/mqtt` |
+| MQTT TCP (Go publisher) | `tcp://localhost:1883` |
+| Dashboard | http://localhost:18083 |
+
+Realtime contract (topics, ACL, JWT connect rules): [docs/realtime.md](docs/realtime.md)
+
+Connect a client after login:
+
+1. `POST /api/v1/auth/login` → copy `access_token`
+2. `GET /api/v1/me` → copy `user.id`
+3. MQTT over WebSocket:
+   - username = `user.id`
+   - password = `access_token`
+   - subscribe = `chat/user/<user.id>/inbox`
+
+Own inbox subscribe should succeed; another user's inbox should be denied.
+
+### Send a direct message (Phases 3–4)
+
+```sh
+curl -sS -X POST http://localhost:8080/api/v1/messages/direct \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "recipient_username": "bob",
+    "body": "hey, are you free?",
+    "client_message_id": "device-msg-1"
+  }'
+```
+
+Recipient MQTTX (subscribed to their inbox) should receive a `message.new` event.
+`client_message_id` makes retries idempotent per sender.
+
+### Load history / offline catch-up (Phase 5)
+
+```sh
+curl -sS "http://localhost:8080/api/v1/messages/direct?with=bob&limit=50" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+Optional cursors:
+- `after=<message_id>` — messages newer than last seen (reconnect sync)
+- `before=<message_id>` — older page while scrolling up
+
+### Verify Go → EMQX publish (development)
+
+With `APP_ENV=development`, after MQTTX is subscribed to your inbox:
+
+```sh
+curl -sS -X POST http://localhost:8080/api/v1/dev/mqtt/ping \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+
+MQTTX should receive a `message.new` JSON event.
 
 ## Database migrations
 
@@ -104,8 +183,9 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
   -d '{"username":"wahab_039","password":"secure-password"}'
 ```
 
-Both endpoints return a safe user object and an `access_token`. Usernames must
-contain 3–30 lowercase letters, digits, or underscores. Passwords must be 8–72 bytes.
+Register returns a success message only. Login returns `message` and `access_token`.
+Usernames must contain 3–30 lowercase letters, digits, or underscores. Passwords
+must be 8–72 bytes.
 
 ### Current user
 
