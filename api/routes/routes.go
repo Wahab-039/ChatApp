@@ -11,6 +11,7 @@ func Register(
 	health *handlers.Health,
 	authHandler *handlers.Auth,
 	messagesHandler *handlers.Messages,
+	groupsHandler *handlers.Groups,
 	limitLogin gin.HandlerFunc,
 	requireAuth gin.HandlerFunc,
 	mqttDev *handlers.MQTTDev,
@@ -27,6 +28,14 @@ func Register(
 	protected.GET("/users", authHandler.SearchUsers)
 	protected.POST("/messages/direct", messagesHandler.SendDirect)
 	protected.GET("/messages/direct", messagesHandler.ListDirect)
+
+	// Group routes
+	protected.POST("/groups", groupsHandler.Create)
+	protected.GET("/groups", groupsHandler.List)
+	protected.GET("/groups/:id", groupsHandler.Get)
+	protected.POST("/groups/:id/members", groupsHandler.AddMember)
+	protected.POST("/groups/:id/messages", groupsHandler.SendMessage)
+	protected.GET("/groups/:id/messages", groupsHandler.ListMessages)
 
 	if mqttDev != nil {
 		protected.POST("/dev/mqtt/ping", mqttDev.Ping)

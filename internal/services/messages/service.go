@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	maxBodyLength           = 4000
+	maxBodyLength            = 4000
 	maxClientMessageIDLength = 128
 )
 
