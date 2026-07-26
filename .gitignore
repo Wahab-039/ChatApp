@@ -5,6 +5,7 @@
 
 # Go build artifacts
 /chat-app
+/ChatApp
 *.exe
 *.test
 *.out
