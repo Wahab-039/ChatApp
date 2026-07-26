@@ -10,11 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// InboxPublisher is the minimal MQTT contract used by the dev ping endpoint.
-type InboxPublisher interface {
-	PublishToUserInbox(ctx context.Context, userID string, event mqtt.Event) error
-}
-
 // MQTTDev handles development-only MQTT verification endpoints.
 type MQTTDev struct {
 	publisher InboxPublisher

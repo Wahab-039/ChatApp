@@ -12,22 +12,6 @@ import (
 
 var ErrInvalidToken = errors.New("invalid or expired access token")
 
-// Identity represents the authenticated user information stored in a valid token.
-type Identity struct {
-	UserID   string
-	Username string
-}
-
-// TokenIssuer creates access tokens.
-type TokenIssuer interface {
-	Issue(user models.User) (string, error)
-}
-
-// TokenVerifier validates an access token and extracts its identity.
-type TokenVerifier interface {
-	Verify(token string) (Identity, error)
-}
-
 type claims struct {
 	Username string `json:"username"`
 	jwt.RegisteredClaims

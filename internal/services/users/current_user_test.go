@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/Wahab-039/ChatApp/internal/models"
@@ -17,8 +18,16 @@ type fakeProfileRepository struct {
 	searchLimit  int
 }
 
+func (r fakeProfileRepository) Create(_ context.Context, _, _ string) (models.User, error) {
+	return models.User{}, errors.New("not implemented")
+}
+
 func (r fakeProfileRepository) FindByID(_ context.Context, _ string) (models.User, error) {
 	return r.user, r.err
+}
+
+func (r fakeProfileRepository) FindByUsername(_ context.Context, _ string) (models.Credentials, error) {
+	return models.Credentials{}, errors.New("not implemented")
 }
 
 func (r *fakeProfileRepository) SearchByUsername(
@@ -45,4 +54,4 @@ func TestCurrentUserReturnsRepositoryProfile(t *testing.T) {
 	}
 }
 
-var _ Repository = (*fakeProfileRepository)(nil)
+var _ UserRepository = (*fakeProfileRepository)(nil)

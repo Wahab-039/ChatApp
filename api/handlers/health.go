@@ -8,11 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// DatabaseHealthChecker is the minimal database contract required by the health endpoint.
-type DatabaseHealthChecker interface {
-	Ping(ctx context.Context) error
-}
-
 // Health handles service health checks.
 type Health struct {
 	database DatabaseHealthChecker

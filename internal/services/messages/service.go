@@ -10,6 +10,7 @@ import (
 
 	"github.com/Wahab-039/ChatApp/internal/models"
 	appmqtt "github.com/Wahab-039/ChatApp/internal/mqtt"
+	"github.com/Wahab-039/ChatApp/internal/services/users"
 )
 
 const (
@@ -17,33 +18,15 @@ const (
 	maxClientMessageIDLength = 128
 )
 
-// UserRepository looks up recipients for direct messages.
-type UserRepository interface {
-	FindByUsername(ctx context.Context, username string) (models.Credentials, error)
-}
-
-// MessageRepository persists direct messages.
-type MessageRepository interface {
-	Create(ctx context.Context, senderID, recipientID, body, clientMessageID string) (models.DirectMessage, error)
-	FindBySenderAndClientMessageID(ctx context.Context, senderID, clientMessageID string) (models.DirectMessage, error)
-	FindByID(ctx context.Context, id string) (models.DirectMessage, error)
-	ListConversation(ctx context.Context, userID, peerID string, before, after *models.DirectMessage, limit int) ([]models.DirectMessage, error)
-}
-
-// InboxPublisher delivers persisted messages to recipient inboxes.
-type InboxPublisher interface {
-	PublishToUserInbox(ctx context.Context, userID string, event appmqtt.Event) error
-}
-
 // Service sends and stores direct messages.
 type Service struct {
-	users     UserRepository
+	users     users.UserRepository
 	messages  MessageRepository
 	publisher InboxPublisher
 }
 
 // NewService creates a direct-message service.
-func NewService(users UserRepository, messages MessageRepository, publisher InboxPublisher) *Service {
+func NewService(users users.UserRepository, messages MessageRepository, publisher InboxPublisher) *Service {
 	return &Service{users: users, messages: messages, publisher: publisher}
 }
 

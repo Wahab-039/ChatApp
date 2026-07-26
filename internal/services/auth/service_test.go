@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Wahab-039/ChatApp/internal/models"
+	"github.com/Wahab-039/ChatApp/internal/services/users"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,11 +28,19 @@ func (r *fakeUserRepository) Create(_ context.Context, username, passwordHash st
 	return models.User{ID: "user-1", Username: username}, nil
 }
 
+func (r *fakeUserRepository) FindByID(_ context.Context, _ string) (models.User, error) {
+	return models.User{}, errors.New("not implemented")
+}
+
 func (r *fakeUserRepository) FindByUsername(_ context.Context, _ string) (models.Credentials, error) {
 	if r.findErr != nil {
 		return models.Credentials{}, r.findErr
 	}
 	return r.credentials, nil
+}
+
+func (r *fakeUserRepository) SearchByUsername(_ context.Context, _, _ string, _ int) ([]models.User, error) {
+	return nil, errors.New("not implemented")
 }
 
 type fakeTokenIssuer struct {
@@ -59,6 +68,9 @@ func TestServiceRegisterNormalizesUsernameAndHashesPassword(t *testing.T) {
 		t.Fatalf("created password is not a bcrypt hash: %v", err)
 	}
 }
+
+var _ users.UserRepository = (*fakeUserRepository)(nil)
+var _ TokenIssuer = fakeTokenIssuer{}
 
 func TestServiceLoginRejectsUnknownUser(t *testing.T) {
 	service := NewService(
@@ -88,5 +100,3 @@ func TestTokenManagerIssuesAndVerifiesToken(t *testing.T) {
 		t.Fatalf("identity = %#v", identity)
 	}
 }
-
-var _ UserRepository = (*fakeUserRepository)(nil)

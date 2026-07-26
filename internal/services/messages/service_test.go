@@ -8,11 +8,20 @@ import (
 
 	"github.com/Wahab-039/ChatApp/internal/models"
 	appmqtt "github.com/Wahab-039/ChatApp/internal/mqtt"
+	"github.com/Wahab-039/ChatApp/internal/services/users"
 )
 
 type fakeUsers struct {
 	byUsername map[string]models.Credentials
 	err        error
+}
+
+func (f fakeUsers) Create(_ context.Context, _, _ string) (models.User, error) {
+	return models.User{}, errors.New("not implemented")
+}
+
+func (f fakeUsers) FindByID(_ context.Context, _ string) (models.User, error) {
+	return models.User{}, errors.New("not implemented")
 }
 
 func (f fakeUsers) FindByUsername(_ context.Context, username string) (models.Credentials, error) {
@@ -25,6 +34,12 @@ func (f fakeUsers) FindByUsername(_ context.Context, username string) (models.Cr
 	}
 	return user, nil
 }
+
+func (f fakeUsers) SearchByUsername(_ context.Context, _, _ string, _ int) ([]models.User, error) {
+	return nil, errors.New("not implemented")
+}
+
+var _ users.UserRepository = fakeUsers{}
 
 type fakeMessages struct {
 	byClientID map[string]models.DirectMessage

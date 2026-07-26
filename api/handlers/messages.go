@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -10,12 +9,6 @@ import (
 	messagesservice "github.com/Wahab-039/ChatApp/internal/services/messages"
 	"github.com/gin-gonic/gin"
 )
-
-// DirectMessageService defines message operations used by HTTP handlers.
-type DirectMessageService interface {
-	SendDirect(ctx context.Context, senderID, recipientUsername, body, clientMessageID string) (messagesservice.SendResult, error)
-	ListDirect(ctx context.Context, requesterID string, query messagesservice.HistoryQuery) (messagesservice.HistoryResult, error)
-}
 
 // Messages handles direct-message HTTP requests.
 type Messages struct {

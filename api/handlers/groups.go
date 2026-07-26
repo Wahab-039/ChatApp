@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -11,20 +10,6 @@ import (
 	groupsservice "github.com/Wahab-039/ChatApp/internal/services/groups"
 	"github.com/gin-gonic/gin"
 )
-
-// GroupService defines group management operations used by HTTP handlers.
-type GroupService interface {
-	Create(ctx context.Context, creatorID, name string) (models.Group, error)
-	Get(ctx context.Context, groupID, requesterID string) (models.GroupWithMembers, error)
-	List(ctx context.Context, requesterID string) ([]models.Group, error)
-	AddMember(ctx context.Context, groupID, adderID, username string) error
-}
-
-// GroupMessageService defines group message operations used by HTTP handlers.
-type GroupMessageService interface {
-	Send(ctx context.Context, senderID, groupID, body, clientMessageID string) (groupmessagesservice.SendResult, error)
-	List(ctx context.Context, groupID, requesterID string, query groupmessagesservice.HistoryQuery) (groupmessagesservice.HistoryResult, error)
-}
 
 // Groups handles group-related HTTP requests.
 type Groups struct {
