@@ -16,13 +16,13 @@ const defaultPublishTimeout = 5 * time.Second
 
 // Config holds connection settings for the service MQTT publisher.
 type Config struct {
-	BrokerURL       string
-	Username        string
-	Password        string
-	ClientID        string
-	ConnectTimeout  time.Duration
-	PublishTimeout  time.Duration
-	KeepAlive       time.Duration
+	BrokerURL      string
+	Username       string
+	Password       string
+	ClientID       string
+	ConnectTimeout time.Duration
+	PublishTimeout time.Duration
+	KeepAlive      time.Duration
 }
 
 // Publisher publishes JSON events to EMQX as the privileged service account.
@@ -137,3 +137,5 @@ func (p *Publisher) Close() {
 	}
 	p.client.Disconnect(250)
 }
+
+var _ InboxPublisher = (*Publisher)(nil)

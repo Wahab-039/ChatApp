@@ -48,9 +48,6 @@ cp .env.example .env
 lifetimes use Go durations, such as `24h` or `30m`. The same secret is injected
 into EMQX so MQTT clients can authenticate with the login access token.
 
-`LOGIN_RATE_LIMIT` and `LOGIN_RATE_WINDOW` control the process-local login throttle.
-The defaults are 10 login requests per client IP per minute.
-
 `EMQX_SERVICE_PASSWORD` is the broker password for the Go publisher account
 (`chatapp_service`). Keep it secret and out of git.
 
@@ -129,7 +126,16 @@ MQTTX should receive a `message.new` JSON event.
 
 ## Database migrations
 
-Create the database named in `DB_NAME`, then apply migrations with Goose:
+Create the database named in `DB_NAME`, then apply migrations with Goose via Make
+(reads DB settings from `.env`):
+
+```sh
+make migrate
+make migrate-status
+make migrate-down
+```
+
+Or call Goose directly:
 
 ```sh
 go run github.com/pressly/goose/v3/cmd/goose@v3.27.2 \
@@ -140,13 +146,6 @@ go run github.com/pressly/goose/v3/cmd/goose@v3.27.2 \
 
 ```text
 postgres://chatapp:password@localhost:5432/chatapp?sslmode=disable
-```
-
-To run repository integration tests, provide a separate disposable database:
-
-```sh
-TEST_DATABASE_URL='postgres://chatapp:password@localhost:5432/chatapp_test?sslmode=disable' \
-  go test ./internal/repositories/users -run Integration
 ```
 
 ## Run locally
@@ -209,6 +208,5 @@ the authenticated user.
 ```sh
 go fmt ./...
 go vet ./...
-go test ./...
 go build ./...
 ```

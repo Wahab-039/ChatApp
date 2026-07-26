@@ -6,8 +6,8 @@ import (
 	"github.com/Wahab-039/ChatApp/internal/models"
 )
 
-// GroupRepository is the persistence contract for group operations.
-type GroupRepository interface {
+// RepositoryInterface is the persistence contract for group operations.
+type RepositoryInterface interface {
 	Create(ctx context.Context, name, createdBy string) (models.Group, error)
 	FindByID(ctx context.Context, id string) (models.Group, error)
 	ListByUserID(ctx context.Context, userID string) ([]models.Group, error)

@@ -33,7 +33,6 @@ func newRouter(conn *database.Postgres, cfg *config.Config, publisher *appmqtt.P
 	groupService := groupsservice.NewService(groupRepository, userRepository)
 	groupMessageService := groupmessagesservice.NewService(groupRepository, groupMessageRepository, publisher)
 	authMiddleware := middleware.NewAuth(tokenManager)
-	loginRateLimiter := middleware.NewLoginRateLimiter(cfg.LoginRateLimit, cfg.LoginRateWindow)
 
 	var mqttDev *handlers.MQTTDev
 	if cfg.Environment == "development" {
@@ -46,7 +45,6 @@ func newRouter(conn *database.Postgres, cfg *config.Config, publisher *appmqtt.P
 		handlers.NewAuth(authService, userService),
 		handlers.NewMessages(messageService),
 		handlers.NewGroups(groupService, groupMessageService),
-		loginRateLimiter.LimitLogin(),
 		authMiddleware.RequireAuth(),
 		mqttDev,
 	)

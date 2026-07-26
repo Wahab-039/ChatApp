@@ -13,12 +13,12 @@ import (
 
 // Groups handles group-related HTTP requests.
 type Groups struct {
-	groups   GroupService
-	messages GroupMessageService
+	groups   groupsservice.ServiceInterface
+	messages groupmessagesservice.ServiceInterface
 }
 
 // NewGroups creates a groups handler.
-func NewGroups(groups GroupService, messages GroupMessageService) *Groups {
+func NewGroups(groups groupsservice.ServiceInterface, messages groupmessagesservice.ServiceInterface) *Groups {
 	return &Groups{groups: groups, messages: messages}
 }
 

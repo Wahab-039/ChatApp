@@ -6,8 +6,8 @@ import (
 	"github.com/Wahab-039/ChatApp/internal/models"
 )
 
-// UserRepository is the persistence contract for user operations.
-type UserRepository interface {
+// RepositoryInterface is the persistence contract for user operations.
+type RepositoryInterface interface {
 	Create(ctx context.Context, username, passwordHash string) (models.User, error)
 	FindByID(ctx context.Context, id string) (models.User, error)
 	FindByUsername(ctx context.Context, username string) (models.Credentials, error)

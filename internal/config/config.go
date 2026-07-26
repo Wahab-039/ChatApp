@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,14 +22,12 @@ type Config struct {
 	DatabaseSSLMode  string
 	JWTSecret        string
 	JWTAccessTTL     time.Duration
-	LoginRateLimit   int
-	LoginRateWindow  time.Duration
 
-	MQTTBrokerURL        string
-	MQTTServiceUsername  string
-	MQTTServicePassword  string
-	MQTTClientID         string
-	MQTTConnectTimeout   time.Duration
+	MQTTBrokerURL       string
+	MQTTServiceUsername string
+	MQTTServicePassword string
+	MQTTClientID        string
+	MQTTConnectTimeout  time.Duration
 }
 
 // Load reads and validates application configuration from the environment.
@@ -40,14 +37,6 @@ func Load() (*Config, error) {
 	jwtAccessTTL, err := time.ParseDuration(getEnv("JWT_ACCESS_TTL", "24h"))
 	if err != nil || jwtAccessTTL <= 0 {
 		return nil, errors.New("JWT_ACCESS_TTL must be a positive Go duration")
-	}
-	loginRateLimit, err := parsePositiveInt(getEnv("LOGIN_RATE_LIMIT", "10"))
-	if err != nil {
-		return nil, fmt.Errorf("LOGIN_RATE_LIMIT: %w", err)
-	}
-	loginRateWindow, err := time.ParseDuration(getEnv("LOGIN_RATE_WINDOW", "1m"))
-	if err != nil || loginRateWindow <= 0 {
-		return nil, errors.New("LOGIN_RATE_WINDOW must be a positive Go duration")
 	}
 	mqttConnectTimeout, err := time.ParseDuration(getEnv("EMQX_CONNECT_TIMEOUT", "10s"))
 	if err != nil || mqttConnectTimeout <= 0 {
@@ -65,8 +54,6 @@ func Load() (*Config, error) {
 		DatabaseSSLMode:  getEnv("DB_SSLMODE", "disable"),
 		JWTSecret:        strings.TrimSpace(os.Getenv("JWT_SECRET")),
 		JWTAccessTTL:     jwtAccessTTL,
-		LoginRateLimit:   loginRateLimit,
-		LoginRateWindow:  loginRateWindow,
 
 		MQTTBrokerURL:       normalizeMQTTBrokerURL(getEnv("EMQX_MQTT_TCP_URL", "tcp://localhost:1883")),
 		MQTTServiceUsername: strings.TrimSpace(getEnv("EMQX_SERVICE_USERNAME", "chatapp_service")),
@@ -127,12 +114,4 @@ func getEnv(key, fallback string) string {
 	}
 
 	return value
-}
-
-func parsePositiveInt(value string) (int, error) {
-	parsed, err := strconv.Atoi(value)
-	if err != nil || parsed <= 0 {
-		return 0, errors.New("must be a positive integer")
-	}
-	return parsed, nil
 }

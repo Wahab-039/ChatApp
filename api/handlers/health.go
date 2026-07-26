@@ -5,17 +5,18 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Wahab-039/ChatApp/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
 // Health handles service health checks.
 type Health struct {
-	database DatabaseHealthChecker
+	db database.HealthChecker
 }
 
 // NewHealth creates a health handler backed by database.
-func NewHealth(database DatabaseHealthChecker) *Health {
-	return &Health{database: database}
+func NewHealth(db database.HealthChecker) *Health {
+	return &Health{db: db}
 }
 
 // Check confirms the API and its database dependency are reachable.
@@ -23,7 +24,7 @@ func (h *Health) Check(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), time.Second)
 	defer cancel()
 
-	if err := h.database.Ping(ctx); err != nil {
+	if err := h.db.Ping(ctx); err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"status": "unavailable",
 		})

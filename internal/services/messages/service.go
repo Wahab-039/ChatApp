@@ -10,7 +10,8 @@ import (
 
 	"github.com/Wahab-039/ChatApp/internal/models"
 	appmqtt "github.com/Wahab-039/ChatApp/internal/mqtt"
-	"github.com/Wahab-039/ChatApp/internal/services/users"
+	messagerepository "github.com/Wahab-039/ChatApp/internal/repositories/messages"
+	userrepository "github.com/Wahab-039/ChatApp/internal/repositories/users"
 )
 
 const (
@@ -18,15 +19,25 @@ const (
 	maxClientMessageIDLength = 128
 )
 
+// ServiceInterface defines direct-message use cases.
+type ServiceInterface interface {
+	SendDirect(ctx context.Context, senderID, recipientUsername, body, clientMessageID string) (SendResult, error)
+	ListDirect(ctx context.Context, requesterID string, query HistoryQuery) (HistoryResult, error)
+}
+
 // Service sends and stores direct messages.
 type Service struct {
-	users     users.UserRepository
-	messages  MessageRepository
-	publisher InboxPublisher
+	users     userrepository.RepositoryInterface
+	messages  messagerepository.RepositoryInterface
+	publisher appmqtt.InboxPublisher
 }
 
 // NewService creates a direct-message service.
-func NewService(users users.UserRepository, messages MessageRepository, publisher InboxPublisher) *Service {
+func NewService(
+	users userrepository.RepositoryInterface,
+	messages messagerepository.RepositoryInterface,
+	publisher appmqtt.InboxPublisher,
+) *Service {
 	return &Service{users: users, messages: messages, publisher: publisher}
 }
 
@@ -133,3 +144,5 @@ func normalizeClientMessageID(clientMessageID string) (string, error) {
 	}
 	return normalized, nil
 }
+
+var _ ServiceInterface = (*Service)(nil)

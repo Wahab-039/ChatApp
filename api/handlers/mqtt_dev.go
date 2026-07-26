@@ -12,11 +12,11 @@ import (
 
 // MQTTDev handles development-only MQTT verification endpoints.
 type MQTTDev struct {
-	publisher InboxPublisher
+	publisher mqtt.InboxPublisher
 }
 
 // NewMQTTDev creates a development MQTT handler.
-func NewMQTTDev(publisher InboxPublisher) *MQTTDev {
+func NewMQTTDev(publisher mqtt.InboxPublisher) *MQTTDev {
 	return &MQTTDev{publisher: publisher}
 }
 

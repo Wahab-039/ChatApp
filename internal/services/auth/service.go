@@ -1,13 +1,21 @@
 package auth
 
 import (
+	"context"
+
 	"github.com/Wahab-039/ChatApp/internal/models"
-	"github.com/Wahab-039/ChatApp/internal/services/users"
+	userrepository "github.com/Wahab-039/ChatApp/internal/repositories/users"
 )
+
+// ServiceInterface defines authentication use cases.
+type ServiceInterface interface {
+	Register(ctx context.Context, username, password string) (models.User, error)
+	Login(ctx context.Context, username, password string) (Result, error)
+}
 
 // Service contains dependencies shared by authentication use cases.
 type Service struct {
-	users  users.UserRepository
+	users  userrepository.RepositoryInterface
 	tokens TokenIssuer
 }
 
@@ -18,6 +26,8 @@ type Result struct {
 }
 
 // NewService creates an authentication service with explicit dependencies.
-func NewService(userRepository users.UserRepository, tokenIssuer TokenIssuer) *Service {
+func NewService(userRepository userrepository.RepositoryInterface, tokenIssuer TokenIssuer) *Service {
 	return &Service{users: userRepository, tokens: tokenIssuer}
 }
+
+var _ ServiceInterface = (*Service)(nil)

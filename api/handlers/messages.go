@@ -12,11 +12,11 @@ import (
 
 // Messages handles direct-message HTTP requests.
 type Messages struct {
-	messages DirectMessageService
+	messages messagesservice.ServiceInterface
 }
 
 // NewMessages creates a messages handler.
-func NewMessages(messages DirectMessageService) *Messages {
+func NewMessages(messages messagesservice.ServiceInterface) *Messages {
 	return &Messages{messages: messages}
 }
 

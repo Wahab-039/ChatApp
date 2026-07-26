@@ -12,7 +12,6 @@ func Register(
 	authHandler *handlers.Auth,
 	messagesHandler *handlers.Messages,
 	groupsHandler *handlers.Groups,
-	limitLogin gin.HandlerFunc,
 	requireAuth gin.HandlerFunc,
 	mqttDev *handlers.MQTTDev,
 ) {
@@ -20,7 +19,7 @@ func Register(
 
 	api := router.Group("/api/v1")
 	api.POST("/auth/register", authHandler.Register)
-	api.POST("/auth/login", limitLogin, authHandler.Login)
+	api.POST("/auth/login", authHandler.Login)
 
 	protected := api.Group("")
 	protected.Use(requireAuth)

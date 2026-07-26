@@ -12,3 +12,5 @@ type PostgresRepository struct {
 func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 	return &PostgresRepository{pool: pool}
 }
+
+var _ RepositoryInterface = (*PostgresRepository)(nil)
