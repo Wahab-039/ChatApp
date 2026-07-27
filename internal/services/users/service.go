@@ -16,12 +16,12 @@ type ServiceInterface interface {
 
 // Service contains dependencies shared by user-management use cases.
 type Service struct {
-	repository userrepository.RepositoryInterface
+	userRepository userrepository.RepositoryInterface
 }
 
 // NewService creates a user-management service with an explicit repository dependency.
 func NewService(repository userrepository.RepositoryInterface) *Service {
-	return &Service{repository: repository}
+	return &Service{userRepository: repository}
 }
 
 var _ ServiceInterface = (*Service)(nil)

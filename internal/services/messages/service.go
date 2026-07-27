@@ -27,18 +27,18 @@ type ServiceInterface interface {
 
 // Service sends and stores direct messages.
 type Service struct {
-	users     userrepository.RepositoryInterface
-	messages  messagerepository.RepositoryInterface
-	publisher appmqtt.InboxPublisher
+	userRepository userrepository.RepositoryInterface
+	messages       messagerepository.RepositoryInterface
+	publisher      appmqtt.InboxPublisher
 }
 
 // NewService creates a direct-message service.
 func NewService(
-	users userrepository.RepositoryInterface,
+	userRepository userrepository.RepositoryInterface,
 	messages messagerepository.RepositoryInterface,
 	publisher appmqtt.InboxPublisher,
 ) *Service {
-	return &Service{users: users, messages: messages, publisher: publisher}
+	return &Service{userRepository: userRepository, messages: messages, publisher: publisher}
 }
 
 // SendResult is returned after a successful send (new or idempotent replay).
@@ -71,7 +71,7 @@ func (s *Service) SendDirect(
 		return SendResult{}, err
 	}
 
-	recipient, err := s.users.FindByUsername(ctx, normalizedRecipient)
+	recipient, err := s.userRepository.FindByUsername(ctx, normalizedRecipient)
 	if err != nil {
 		if errors.Is(err, models.ErrUserNotFound) {
 			return SendResult{}, ErrRecipientNotFound

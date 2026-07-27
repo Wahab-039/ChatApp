@@ -126,20 +126,25 @@ MQTTX should receive a `message.new` JSON event.
 
 ## Database migrations
 
-Create the database named in `DB_NAME`, then apply migrations with Goose via Make
-(reads DB settings from `.env`):
+Create the database named in `DB_NAME`, install [Goose](https://github.com/pressly/goose),
+then apply migrations (Make reads DB settings from `.env`):
 
 ```sh
-make migrate
+make migrate-up
 make migrate-status
 make migrate-down
+```
+
+Create a new migration file:
+
+```sh
+make migration name=add_something
 ```
 
 Or call Goose directly:
 
 ```sh
-go run github.com/pressly/goose/v3/cmd/goose@v3.27.2 \
-  -dir migrations postgres "$DATABASE_URL" up
+goose -dir migrations postgres "$DATABASE_URL" up
 ```
 
 `DATABASE_URL` is a PostgreSQL connection string, for example:

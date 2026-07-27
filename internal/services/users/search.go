@@ -16,5 +16,5 @@ func (s *Service) Search(ctx context.Context, query, requesterID string) ([]mode
 		return nil, ErrSearchQueryRequired
 	}
 
-	return s.repository.SearchByUsername(ctx, normalizedQuery, requesterID, searchResultLimit)
+	return s.userRepository.SearchByUsername(ctx, normalizedQuery, requesterID, searchResultLimit)
 }

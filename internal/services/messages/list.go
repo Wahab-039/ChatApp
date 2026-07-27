@@ -44,7 +44,7 @@ func (s *Service) ListDirect(ctx context.Context, requesterID string, query Hist
 		return HistoryResult{}, err
 	}
 
-	peer, err := s.users.FindByUsername(ctx, peerUsername)
+	peer, err := s.userRepository.FindByUsername(ctx, peerUsername)
 	if err != nil {
 		if errors.Is(err, models.ErrUserNotFound) {
 			return HistoryResult{}, ErrRecipientNotFound
