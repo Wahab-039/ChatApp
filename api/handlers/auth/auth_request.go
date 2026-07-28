@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 type credentialsRequest struct {
 	Username string `json:"username" binding:"required"`

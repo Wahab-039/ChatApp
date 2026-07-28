@@ -1,4 +1,4 @@
-package handlers
+package users
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ type userSearchResponse struct {
 }
 
 // SearchUsers returns users whose usernames begin with the query parameter.
-func (h *Auth) SearchUsers(c *gin.Context) {
+func (h *Handler) SearchUsers(c *gin.Context) {
 	identity, ok := middleware.IdentityFromContext(c)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "authenticated identity is unavailable"})

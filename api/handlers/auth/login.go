@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 )
 
 // Login validates account credentials and returns an access token.
-func (h *Auth) Login(c *gin.Context) {
+func (h *Handler) Login(c *gin.Context) {
 	var request credentialsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "username and password are required"})

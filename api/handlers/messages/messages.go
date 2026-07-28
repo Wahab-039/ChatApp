@@ -1,4 +1,4 @@
-package handlers
+package messages
 
 import (
 	"errors"
@@ -10,16 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Messages handles direct-message HTTP requests.
-type Messages struct {
-	messages messagesservice.ServiceInterface
-}
-
-// NewMessages creates a messages handler.
-func NewMessages(messages messagesservice.ServiceInterface) *Messages {
-	return &Messages{messages: messages}
-}
-
 type sendDirectRequest struct {
 	RecipientUsername string `json:"recipient_username"`
 	Body              string `json:"body"`
@@ -27,7 +17,7 @@ type sendDirectRequest struct {
 }
 
 // SendDirect persists a DM and publishes it to the recipient inbox.
-func (h *Messages) SendDirect(c *gin.Context) {
+func (h *Handler) SendDirect(c *gin.Context) {
 	identity, ok := middleware.IdentityFromContext(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication is required"})
@@ -63,7 +53,7 @@ func (h *Messages) SendDirect(c *gin.Context) {
 }
 
 // ListDirect returns paginated conversation history with a peer.
-func (h *Messages) ListDirect(c *gin.Context) {
+func (h *Handler) ListDirect(c *gin.Context) {
 	identity, ok := middleware.IdentityFromContext(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication is required"})
@@ -100,7 +90,7 @@ func (h *Messages) ListDirect(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func (h *Messages) writeMessageError(c *gin.Context, err error, sending bool) {
+func (h *Handler) writeMessageError(c *gin.Context, err error, sending bool) {
 	switch {
 	case errors.Is(err, messagesservice.ErrRecipientRequired),
 		errors.Is(err, messagesservice.ErrPeerRequired),

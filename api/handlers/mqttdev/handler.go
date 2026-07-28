@@ -1,4 +1,4 @@
-package handlers
+package mqttdev
 
 import (
 	"context"
@@ -10,14 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MQTTDev handles development-only MQTT verification endpoints.
-type MQTTDev struct {
+// Handler handles development-only MQTT verification endpoints.
+// Kept as a concrete type so routes can pass nil when disabled.
+type Handler struct {
 	publisher mqtt.InboxPublisher
 }
 
-// NewMQTTDev creates a development MQTT handler.
-func NewMQTTDev(publisher mqtt.InboxPublisher) *MQTTDev {
-	return &MQTTDev{publisher: publisher}
+// NewHandler creates a development MQTT handler.
+func NewHandler(publisher mqtt.InboxPublisher) *Handler {
+	return &Handler{publisher: publisher}
 }
 
 type mqttPingRequest struct {
@@ -27,7 +28,7 @@ type mqttPingRequest struct {
 }
 
 // Ping publishes a test message.new event to a user inbox (defaults to the caller).
-func (h *MQTTDev) Ping(c *gin.Context) {
+func (h *Handler) Ping(c *gin.Context) {
 	identity, ok := middleware.IdentityFromContext(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication is required"})

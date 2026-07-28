@@ -1,4 +1,4 @@
-package handlers
+package users
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 )
 
 // Me returns the authenticated user's current profile.
-func (h *Auth) Me(c *gin.Context) {
+func (h *Handler) Me(c *gin.Context) {
 	identity, ok := middleware.IdentityFromContext(c)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "authenticated identity is unavailable"})

@@ -1,7 +1,13 @@
 package app
 
 import (
-	"github.com/Wahab-039/ChatApp/api/handlers"
+	"github.com/Wahab-039/ChatApp/api/handlers/auth"
+	"github.com/Wahab-039/ChatApp/api/handlers/groupmessages"
+	"github.com/Wahab-039/ChatApp/api/handlers/groups"
+	"github.com/Wahab-039/ChatApp/api/handlers/health"
+	"github.com/Wahab-039/ChatApp/api/handlers/messages"
+	"github.com/Wahab-039/ChatApp/api/handlers/mqttdev"
+	"github.com/Wahab-039/ChatApp/api/handlers/users"
 	"github.com/Wahab-039/ChatApp/api/middleware"
 	"github.com/Wahab-039/ChatApp/api/routes"
 	"github.com/Wahab-039/ChatApp/internal/config"
@@ -34,17 +40,19 @@ func newRouter(conn *database.Postgres, cfg *config.Config, publisher *appmqtt.P
 	groupMessageService := groupmessagesservice.NewService(groupRepository, groupMessageRepository, publisher)
 	authMiddleware := middleware.NewAuth(tokenManager)
 
-	var mqttDev *handlers.MQTTDev
+	var mqttDev *mqttdev.Handler
 	if cfg.Environment == "development" {
-		mqttDev = handlers.NewMQTTDev(publisher)
+		mqttDev = mqttdev.NewHandler(publisher)
 	}
 
 	routes.Register(
 		router,
-		handlers.NewHealth(conn.Pool),
-		handlers.NewAuth(authService, userService),
-		handlers.NewMessages(messageService),
-		handlers.NewGroups(groupService, groupMessageService),
+		health.NewHandler(conn.Pool),
+		auth.NewHandler(authService),
+		users.NewHandler(userService),
+		messages.NewHandler(messageService),
+		groups.NewHandler(groupService),
+		groupmessages.NewHandler(groupMessageService),
 		authMiddleware.RequireAuth(),
 		mqttDev,
 	)

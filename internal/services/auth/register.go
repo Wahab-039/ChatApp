@@ -22,7 +22,6 @@ func (s *Service) Register(ctx context.Context, username, password string) (mode
 	if err != nil {
 		return models.User{}, fmt.Errorf("hash password: %w", err)
 	}
-
 	user, err := s.users.Create(ctx, normalizedUsername, string(passwordHash))
 	if err != nil {
 		return models.User{}, err

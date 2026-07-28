@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Auth) writeAuthError(c *gin.Context, err error, registration bool) {
+func (h *Handler) writeAuthError(c *gin.Context, err error, registration bool) {
 	switch {
 	case errors.Is(err, models.ErrUsernameTaken):
 		c.JSON(http.StatusConflict, gin.H{"error": "username is already taken"})

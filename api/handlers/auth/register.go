@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 )
 
 // Register creates a new account.
-func (h *Auth) Register(c *gin.Context) {
+func (h *Handler) Register(c *gin.Context) {
 	var request credentialsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "username and password are required"})

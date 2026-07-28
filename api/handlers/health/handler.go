@@ -1,4 +1,4 @@
-package handlers
+package health
 
 import (
 	"context"
@@ -9,18 +9,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Health handles service health checks.
-type Health struct {
+// HandlerInterface defines health-check HTTP handlers.
+type HandlerInterface interface {
+	Check(c *gin.Context)
+}
+
+// Handler handles service health checks.
+type Handler struct {
 	db database.HealthChecker
 }
 
-// NewHealth creates a health handler backed by database.
-func NewHealth(db database.HealthChecker) *Health {
-	return &Health{db: db}
+// NewHandler creates a health handler backed by database.
+func NewHandler(db database.HealthChecker) *Handler {
+	return &Handler{db: db}
 }
 
 // Check confirms the API and its database dependency are reachable.
-func (h *Health) Check(c *gin.Context) {
+func (h *Handler) Check(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), time.Second)
 	defer cancel()
 
@@ -35,3 +40,5 @@ func (h *Health) Check(c *gin.Context) {
 		"status": "ok",
 	})
 }
+
+var _ HandlerInterface = (*Handler)(nil)
