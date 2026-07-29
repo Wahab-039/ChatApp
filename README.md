@@ -111,19 +111,6 @@ Optional cursors:
 - `after=<message_id>` — messages newer than last seen (reconnect sync)
 - `before=<message_id>` — older page while scrolling up
 
-### Verify Go → EMQX publish (development)
-
-With `APP_ENV=development`, after MQTTX is subscribed to your inbox:
-
-```sh
-curl -sS -X POST http://localhost:8080/api/v1/dev/mqtt/ping \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{}'
-```
-
-MQTTX should receive a `message.new` JSON event.
-
 ## Database migrations
 
 Create the database named in `DB_NAME`, install [Goose](https://github.com/pressly/goose),
@@ -162,14 +149,6 @@ go run .
 The service listens on `http://localhost:8080` by default.
 
 ## API
-
-### Health check
-
-```sh
-curl http://localhost:8080/health
-```
-
-The endpoint returns `503 Service Unavailable` when PostgreSQL cannot be reached.
 
 ### Register
 
