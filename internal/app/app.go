@@ -2,7 +2,6 @@
 package app
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/Wahab-039/ChatApp/ent"
@@ -16,14 +15,13 @@ import (
 type Application struct {
 	config    *config.Config
 	entClient *ent.Client
-	sqlDB     *sql.DB
 	publisher *appmqtt.Publisher
 	router    *gin.Engine
 }
 
 // New creates the application's long-lived resources and configures its routes.
 func New(cfg *config.Config) (*Application, error) {
-	entClient, sqlDB, err := database.NewEntClient(cfg.DatabaseURL())
+	entClient, _, err := database.NewEntClient(cfg.DatabaseURL())
 	if err != nil {
 		return nil, fmt.Errorf("connect database: %w", err)
 	}
@@ -43,9 +41,8 @@ func New(cfg *config.Config) (*Application, error) {
 	return &Application{
 		config:    cfg,
 		entClient: entClient,
-		sqlDB:     sqlDB,
 		publisher: publisher,
-		router:    newRouter(entClient, sqlDB, cfg, publisher),
+		router:    newRouter(entClient, cfg, publisher),
 	}, nil
 }
 

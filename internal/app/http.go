@@ -1,8 +1,6 @@
 package app
 
 import (
-	"database/sql"
-
 	"github.com/Wahab-039/ChatApp/api/handlers/auth"
 	"github.com/Wahab-039/ChatApp/api/handlers/groupmessages"
 	"github.com/Wahab-039/ChatApp/api/handlers/groups"
@@ -26,10 +24,7 @@ import (
 )
 
 // newRouter wires up all dependencies and returns a configured gin router.
-// entClient is the Ent ORM client used by all repositories.
-// sqlDB is the underlying *sql.DB passed to repositories that need raw SQL
-// (specifically groups, whose group_members table has no surrogate id column).
-func newRouter(entClient *ent.Client, sqlDB *sql.DB, cfg *config.Config, publisher *appmqtt.Publisher) *gin.Engine {
+func newRouter(entClient *ent.Client, cfg *config.Config, publisher *appmqtt.Publisher) *gin.Engine {
 	router := gin.Default()
 
 	userRepository := userrepository.NewEntRepository(entClient)

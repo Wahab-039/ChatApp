@@ -81,8 +81,8 @@ func Connect(cfg Config) (*Publisher, error) {
 	}, nil
 }
 
-// Publish sends raw bytes to topic at QoS 1.
-func (p *Publisher) Publish(ctx context.Context, topic string, payload []byte) error {
+// publish sends raw bytes to topic at QoS 1.
+func (p *Publisher) publish(ctx context.Context, topic string, payload []byte) error {
 	if p == nil || p.client == nil {
 		return errors.New("mqtt publisher is not connected")
 	}
@@ -113,13 +113,13 @@ func (p *Publisher) Publish(ctx context.Context, topic string, payload []byte) e
 	return nil
 }
 
-// PublishEvent marshals event as JSON and publishes it to topic.
-func (p *Publisher) PublishEvent(ctx context.Context, topic string, event Event) error {
+// publishEvent marshals event as JSON and publishes it to topic.
+func (p *Publisher) publishEvent(ctx context.Context, topic string, event Event) error {
 	body, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("marshal mqtt event: %w", err)
 	}
-	return p.Publish(ctx, topic, body)
+	return p.publish(ctx, topic, body)
 }
 
 // PublishToUserInbox publishes event to chat/user/{userID}/inbox.
@@ -127,7 +127,7 @@ func (p *Publisher) PublishToUserInbox(ctx context.Context, userID string, event
 	if userID == "" {
 		return errors.New("user id is required")
 	}
-	return p.PublishEvent(ctx, UserInboxTopic(userID), event)
+	return p.publishEvent(ctx, UserInboxTopic(userID), event)
 }
 
 // Close disconnects from EMQX.
