@@ -8,6 +8,7 @@ import (
 	"github.com/Wahab-039/ChatApp/api/handlers/users"
 	"github.com/Wahab-039/ChatApp/api/middleware"
 	"github.com/Wahab-039/ChatApp/api/routes"
+	"github.com/Wahab-039/ChatApp/ent"
 	"github.com/Wahab-039/ChatApp/internal/config"
 	"github.com/Wahab-039/ChatApp/internal/database"
 	appmqtt "github.com/Wahab-039/ChatApp/internal/mqtt"
@@ -23,9 +24,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func newRouter(conn *database.Postgres, cfg *config.Config, publisher *appmqtt.Publisher) *gin.Engine {
+// newRouter wires up all dependencies and returns a configured gin router.
+// conn is the existing pgx pool (used by current repositories).
+// entClient is the Ent ORM client — repositories will be migrated to use it in Phase 5.
+func newRouter(conn *database.Postgres, entClient *ent.Client, cfg *config.Config, publisher *appmqtt.Publisher) *gin.Engine {
 	router := gin.Default()
 
+	// TODO Phase 5: swap these one by one to NewEntRepository(entClient)
 	userRepository := userrepository.NewPostgresRepository(conn.Pool)
 	messageRepository := messagerepository.NewPostgresRepository(conn.Pool)
 	groupRepository := grouprepository.NewPostgresRepository(conn.Pool)
