@@ -678,6 +678,7 @@ func (_q *UserQuery) loadMemberships(ctx context.Context, query *GroupMemberQuer
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(groupmember.FieldUserID)
 	}

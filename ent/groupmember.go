@@ -18,9 +18,7 @@ import (
 type GroupMember struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
-	// GroupID holds the value of the "group_id" field.
-	GroupID string `json:"group_id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID string `json:"user_id,omitempty"`
 	// Role holds the value of the "role" field.
@@ -29,8 +27,9 @@ type GroupMember struct {
 	JoinedAt time.Time `json:"joined_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GroupMemberQuery when eager-loading is set.
-	Edges        GroupMemberEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges             GroupMemberEdges `json:"edges"`
+	group_memberships *string
+	selectValues      sql.SelectValues
 }
 
 // GroupMemberEdges holds the relations/edges for other nodes in the graph.
@@ -71,12 +70,12 @@ func (*GroupMember) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case groupmember.FieldID:
-			values[i] = new(sql.NullInt64)
-		case groupmember.FieldGroupID, groupmember.FieldUserID, groupmember.FieldRole:
+		case groupmember.FieldID, groupmember.FieldUserID, groupmember.FieldRole:
 			values[i] = new(sql.NullString)
 		case groupmember.FieldJoinedAt:
 			values[i] = new(sql.NullTime)
+		case groupmember.ForeignKeys[0]: // group_memberships
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -93,16 +92,10 @@ func (_m *GroupMember) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case groupmember.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
-			}
-			_m.ID = int(value.Int64)
-		case groupmember.FieldGroupID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field group_id", values[i])
+				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				_m.GroupID = value.String
+				_m.ID = value.String
 			}
 		case groupmember.FieldUserID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -121,6 +114,13 @@ func (_m *GroupMember) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field joined_at", values[i])
 			} else if value.Valid {
 				_m.JoinedAt = value.Time
+			}
+		case groupmember.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field group_memberships", values[i])
+			} else if value.Valid {
+				_m.group_memberships = new(string)
+				*_m.group_memberships = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -168,9 +168,6 @@ func (_m *GroupMember) String() string {
 	var builder strings.Builder
 	builder.WriteString("GroupMember(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
-	builder.WriteString("group_id=")
-	builder.WriteString(_m.GroupID)
-	builder.WriteString(", ")
 	builder.WriteString("user_id=")
 	builder.WriteString(_m.UserID)
 	builder.WriteString(", ")

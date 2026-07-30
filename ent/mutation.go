@@ -695,8 +695,8 @@ type GroupMutation struct {
 	clearedFields      map[string]struct{}
 	creator            *string
 	clearedcreator     bool
-	memberships        map[int]struct{}
-	removedmemberships map[int]struct{}
+	memberships        map[string]struct{}
+	removedmemberships map[string]struct{}
 	clearedmemberships bool
 	messages           map[string]struct{}
 	removedmessages    map[string]struct{}
@@ -995,9 +995,9 @@ func (m *GroupMutation) ResetCreator() {
 }
 
 // AddMembershipIDs adds the "memberships" edge to the GroupMember entity by ids.
-func (m *GroupMutation) AddMembershipIDs(ids ...int) {
+func (m *GroupMutation) AddMembershipIDs(ids ...string) {
 	if m.memberships == nil {
-		m.memberships = make(map[int]struct{})
+		m.memberships = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.memberships[ids[i]] = struct{}{}
@@ -1015,9 +1015,9 @@ func (m *GroupMutation) MembershipsCleared() bool {
 }
 
 // RemoveMembershipIDs removes the "memberships" edge to the GroupMember entity by IDs.
-func (m *GroupMutation) RemoveMembershipIDs(ids ...int) {
+func (m *GroupMutation) RemoveMembershipIDs(ids ...string) {
 	if m.removedmemberships == nil {
-		m.removedmemberships = make(map[int]struct{})
+		m.removedmemberships = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.memberships, ids[i])
@@ -1026,7 +1026,7 @@ func (m *GroupMutation) RemoveMembershipIDs(ids ...int) {
 }
 
 // RemovedMemberships returns the removed IDs of the "memberships" edge to the GroupMember entity.
-func (m *GroupMutation) RemovedMembershipsIDs() (ids []int) {
+func (m *GroupMutation) RemovedMembershipsIDs() (ids []string) {
 	for id := range m.removedmemberships {
 		ids = append(ids, id)
 	}
@@ -1034,7 +1034,7 @@ func (m *GroupMutation) RemovedMembershipsIDs() (ids []int) {
 }
 
 // MembershipsIDs returns the "memberships" edge IDs in the mutation.
-func (m *GroupMutation) MembershipsIDs() (ids []int) {
+func (m *GroupMutation) MembershipsIDs() (ids []string) {
 	for id := range m.memberships {
 		ids = append(ids, id)
 	}
@@ -1417,7 +1417,7 @@ type GroupMemberMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *int
+	id            *string
 	role          *groupmember.Role
 	joined_at     *time.Time
 	clearedFields map[string]struct{}
@@ -1450,7 +1450,7 @@ func newGroupMemberMutation(c config, op Op, opts ...groupmemberOption) *GroupMe
 }
 
 // withGroupMemberID sets the ID field of the mutation.
-func withGroupMemberID(id int) groupmemberOption {
+func withGroupMemberID(id string) groupmemberOption {
 	return func(m *GroupMemberMutation) {
 		var (
 			err   error
@@ -1500,9 +1500,15 @@ func (m GroupMemberMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of GroupMember entities.
+func (m *GroupMemberMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *GroupMemberMutation) ID() (id int, exists bool) {
+func (m *GroupMemberMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -1513,12 +1519,12 @@ func (m *GroupMemberMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *GroupMemberMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *GroupMemberMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -1526,42 +1532,6 @@ func (m *GroupMemberMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
-}
-
-// SetGroupID sets the "group_id" field.
-func (m *GroupMemberMutation) SetGroupID(s string) {
-	m.group = &s
-}
-
-// GroupID returns the value of the "group_id" field in the mutation.
-func (m *GroupMemberMutation) GroupID() (r string, exists bool) {
-	v := m.group
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldGroupID returns the old "group_id" field's value of the GroupMember entity.
-// If the GroupMember object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *GroupMemberMutation) OldGroupID(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldGroupID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
-	}
-	return oldValue.GroupID, nil
-}
-
-// ResetGroupID resets all changes to the "group_id" field.
-func (m *GroupMemberMutation) ResetGroupID() {
-	m.group = nil
 }
 
 // SetUserID sets the "user_id" field.
@@ -1672,15 +1642,27 @@ func (m *GroupMemberMutation) ResetJoinedAt() {
 	m.joined_at = nil
 }
 
+// SetGroupID sets the "group" edge to the Group entity by id.
+func (m *GroupMemberMutation) SetGroupID(id string) {
+	m.group = &id
+}
+
 // ClearGroup clears the "group" edge to the Group entity.
 func (m *GroupMemberMutation) ClearGroup() {
 	m.clearedgroup = true
-	m.clearedFields[groupmember.FieldGroupID] = struct{}{}
 }
 
 // GroupCleared reports if the "group" edge to the Group entity was cleared.
 func (m *GroupMemberMutation) GroupCleared() bool {
 	return m.clearedgroup
+}
+
+// GroupID returns the "group" edge ID in the mutation.
+func (m *GroupMemberMutation) GroupID() (id string, exists bool) {
+	if m.group != nil {
+		return *m.group, true
+	}
+	return
 }
 
 // GroupIDs returns the "group" edge IDs in the mutation.
@@ -1760,10 +1742,7 @@ func (m *GroupMemberMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMemberMutation) Fields() []string {
-	fields := make([]string, 0, 4)
-	if m.group != nil {
-		fields = append(fields, groupmember.FieldGroupID)
-	}
+	fields := make([]string, 0, 3)
 	if m.user != nil {
 		fields = append(fields, groupmember.FieldUserID)
 	}
@@ -1781,8 +1760,6 @@ func (m *GroupMemberMutation) Fields() []string {
 // schema.
 func (m *GroupMemberMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case groupmember.FieldGroupID:
-		return m.GroupID()
 	case groupmember.FieldUserID:
 		return m.UserID()
 	case groupmember.FieldRole:
@@ -1798,8 +1775,6 @@ func (m *GroupMemberMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *GroupMemberMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case groupmember.FieldGroupID:
-		return m.OldGroupID(ctx)
 	case groupmember.FieldUserID:
 		return m.OldUserID(ctx)
 	case groupmember.FieldRole:
@@ -1815,13 +1790,6 @@ func (m *GroupMemberMutation) OldField(ctx context.Context, name string) (ent.Va
 // type.
 func (m *GroupMemberMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case groupmember.FieldGroupID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetGroupID(v)
-		return nil
 	case groupmember.FieldUserID:
 		v, ok := value.(string)
 		if !ok {
@@ -1892,9 +1860,6 @@ func (m *GroupMemberMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *GroupMemberMutation) ResetField(name string) error {
 	switch name {
-	case groupmember.FieldGroupID:
-		m.ResetGroupID()
-		return nil
 	case groupmember.FieldUserID:
 		m.ResetUserID()
 		return nil
@@ -2668,8 +2633,8 @@ type UserMutation struct {
 	created_groups             map[string]struct{}
 	removedcreated_groups      map[string]struct{}
 	clearedcreated_groups      bool
-	memberships                map[int]struct{}
-	removedmemberships         map[int]struct{}
+	memberships                map[string]struct{}
+	removedmemberships         map[string]struct{}
 	clearedmemberships         bool
 	sent_group_messages        map[string]struct{}
 	removedsent_group_messages map[string]struct{}
@@ -3090,9 +3055,9 @@ func (m *UserMutation) ResetCreatedGroups() {
 }
 
 // AddMembershipIDs adds the "memberships" edge to the GroupMember entity by ids.
-func (m *UserMutation) AddMembershipIDs(ids ...int) {
+func (m *UserMutation) AddMembershipIDs(ids ...string) {
 	if m.memberships == nil {
-		m.memberships = make(map[int]struct{})
+		m.memberships = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.memberships[ids[i]] = struct{}{}
@@ -3110,9 +3075,9 @@ func (m *UserMutation) MembershipsCleared() bool {
 }
 
 // RemoveMembershipIDs removes the "memberships" edge to the GroupMember entity by IDs.
-func (m *UserMutation) RemoveMembershipIDs(ids ...int) {
+func (m *UserMutation) RemoveMembershipIDs(ids ...string) {
 	if m.removedmemberships == nil {
-		m.removedmemberships = make(map[int]struct{})
+		m.removedmemberships = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.memberships, ids[i])
@@ -3121,7 +3086,7 @@ func (m *UserMutation) RemoveMembershipIDs(ids ...int) {
 }
 
 // RemovedMemberships returns the removed IDs of the "memberships" edge to the GroupMember entity.
-func (m *UserMutation) RemovedMembershipsIDs() (ids []int) {
+func (m *UserMutation) RemovedMembershipsIDs() (ids []string) {
 	for id := range m.removedmemberships {
 		ids = append(ids, id)
 	}
@@ -3129,7 +3094,7 @@ func (m *UserMutation) RemovedMembershipsIDs() (ids []int) {
 }
 
 // MembershipsIDs returns the "memberships" edge IDs in the mutation.
-func (m *UserMutation) MembershipsIDs() (ids []int) {
+func (m *UserMutation) MembershipsIDs() (ids []string) {
 	for id := range m.memberships {
 		ids = append(ids, id)
 	}

@@ -112,14 +112,14 @@ func (_u *UserUpdate) AddCreatedGroups(v ...*Group) *UserUpdate {
 }
 
 // AddMembershipIDs adds the "memberships" edge to the GroupMember entity by IDs.
-func (_u *UserUpdate) AddMembershipIDs(ids ...int) *UserUpdate {
+func (_u *UserUpdate) AddMembershipIDs(ids ...string) *UserUpdate {
 	_u.mutation.AddMembershipIDs(ids...)
 	return _u
 }
 
 // AddMemberships adds the "memberships" edges to the GroupMember entity.
 func (_u *UserUpdate) AddMemberships(v ...*GroupMember) *UserUpdate {
-	ids := make([]int, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -216,14 +216,14 @@ func (_u *UserUpdate) ClearMemberships() *UserUpdate {
 }
 
 // RemoveMembershipIDs removes the "memberships" edge to GroupMember entities by IDs.
-func (_u *UserUpdate) RemoveMembershipIDs(ids ...int) *UserUpdate {
+func (_u *UserUpdate) RemoveMembershipIDs(ids ...string) *UserUpdate {
 	_u.mutation.RemoveMembershipIDs(ids...)
 	return _u
 }
 
 // RemoveMemberships removes "memberships" edges to GroupMember entities.
 func (_u *UserUpdate) RemoveMemberships(v ...*GroupMember) *UserUpdate {
-	ids := make([]int, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -466,7 +466,7 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -479,7 +479,7 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -495,7 +495,7 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Columns: []string{user.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -648,14 +648,14 @@ func (_u *UserUpdateOne) AddCreatedGroups(v ...*Group) *UserUpdateOne {
 }
 
 // AddMembershipIDs adds the "memberships" edge to the GroupMember entity by IDs.
-func (_u *UserUpdateOne) AddMembershipIDs(ids ...int) *UserUpdateOne {
+func (_u *UserUpdateOne) AddMembershipIDs(ids ...string) *UserUpdateOne {
 	_u.mutation.AddMembershipIDs(ids...)
 	return _u
 }
 
 // AddMemberships adds the "memberships" edges to the GroupMember entity.
 func (_u *UserUpdateOne) AddMemberships(v ...*GroupMember) *UserUpdateOne {
-	ids := make([]int, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -752,14 +752,14 @@ func (_u *UserUpdateOne) ClearMemberships() *UserUpdateOne {
 }
 
 // RemoveMembershipIDs removes the "memberships" edge to GroupMember entities by IDs.
-func (_u *UserUpdateOne) RemoveMembershipIDs(ids ...int) *UserUpdateOne {
+func (_u *UserUpdateOne) RemoveMembershipIDs(ids ...string) *UserUpdateOne {
 	_u.mutation.RemoveMembershipIDs(ids...)
 	return _u
 }
 
 // RemoveMemberships removes "memberships" edges to GroupMember entities.
 func (_u *UserUpdateOne) RemoveMemberships(v ...*GroupMember) *UserUpdateOne {
-	ids := make([]int, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -1032,7 +1032,7 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1045,7 +1045,7 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -1061,7 +1061,7 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Columns: []string{user.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

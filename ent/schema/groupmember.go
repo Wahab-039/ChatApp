@@ -12,8 +12,9 @@ import (
 )
 
 // GroupMember holds the schema definition for the GroupMember entity.
-// This represents the group_members table, which is NOT a simple junction table —
-// it has extra columns (role, joined_at), so it needs its own full schema.
+// The real table has a composite PK (group_id, user_id) with no surrogate id column.
+// We name the schema field "id" but use StorageKey to map it to "group_id" column.
+// The composite uniqueness is enforced by the unique index on (id, user_id).
 type GroupMember struct {
 	ent.Schema
 }
@@ -21,13 +22,17 @@ type GroupMember struct {
 // Fields of the GroupMember.
 func (GroupMember) Fields() []ent.Field {
 	return []ent.Field{
-		// group_id and user_id are foreign keys wired to edges below.
-		// Together they form the composite PK in the real DB table.
-		field.String("group_id").
-			NotEmpty(),
+		// Ent's "id" field mapped to the "group_id" column via StorageKey.
+		// This tells Ent to use group_id as the primary key column.
+		field.String("id").
+			StorageKey("group_id").
+			NotEmpty().
+			Immutable(),
 
+		// user_id is a regular field that forms the second part of the composite PK.
 		field.String("user_id").
-			NotEmpty(),
+			NotEmpty().
+			Immutable(),
 
 		// role: 'admin' or 'member' — matches DB CHECK constraint
 		field.Enum("role").
@@ -36,7 +41,7 @@ func (GroupMember) Fields() []ent.Field {
 
 		field.Time("joined_at").
 			Default(time.Now).
-			Immutable(), // Membership timestamp never changes
+			Immutable(),
 	}
 }
 
@@ -44,35 +49,32 @@ func (GroupMember) Fields() []ent.Field {
 func (GroupMember) Edges() []ent.Edge {
 	return []ent.Edge{
 		// The group this membership belongs to.
-		// Ref("memberships") links back to Group.Edges → edge.To("memberships")
+		// The "id" field (mapped to group_id column) is automatically used as foreign key
 		edge.From("group", Group.Type).
 			Ref("memberships").
-			Field("group_id").
-			Unique().   // Many memberships → One group
-			Required(),
+			Unique().
+			Required().
+			Immutable(),
 
 		// The user who is the member.
-		// Ref("memberships") links back to User.Edges → edge.To("memberships")
 		edge.From("user", User.Type).
 			Ref("memberships").
 			Field("user_id").
-			Unique().   // Many memberships → One user
-			Required(),
+			Unique().
+			Required().
+			Immutable(),
 	}
 }
 
 // Indexes of the GroupMember.
 func (GroupMember) Indexes() []ent.Index {
 	return []ent.Index{
-		// The real DB primary key is (group_id, user_id).
-		// Declaring it as a unique index here enforces the same constraint.
-		index.Fields("group_id", "user_id").Unique(),
+		// Composite uniqueness — mirrors the real DB PRIMARY KEY (group_id, user_id).
+		// In schema we use "id" which maps to group_id column.
+		index.Fields("id", "user_id").Unique(),
 
-		// Matches DB: CREATE INDEX group_members_user_idx ON group_members(user_id)
 		index.Fields("user_id"),
-
-		// Matches DB: CREATE INDEX group_members_group_idx ON group_members(group_id)
-		index.Fields("group_id"),
+		index.Fields("id"),
 	}
 }
 

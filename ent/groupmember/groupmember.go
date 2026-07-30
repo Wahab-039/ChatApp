@@ -14,9 +14,7 @@ const (
 	// Label holds the string label denoting the groupmember type in the database.
 	Label = "group_member"
 	// FieldID holds the string denoting the id field in the database.
-	FieldID = "id"
-	// FieldGroupID holds the string denoting the group_id field in the database.
-	FieldGroupID = "group_id"
+	FieldID = "group_id"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
 	// FieldRole holds the string denoting the role field in the database.
@@ -27,6 +25,10 @@ const (
 	EdgeGroup = "group"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// GroupFieldID holds the string denoting the ID field of the Group.
+	GroupFieldID = "id"
+	// UserFieldID holds the string denoting the ID field of the User.
+	UserFieldID = "id"
 	// Table holds the table name of the groupmember in the database.
 	Table = "group_members"
 	// GroupTable is the table that holds the group relation/edge.
@@ -35,7 +37,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "group" package.
 	GroupInverseTable = "groups"
 	// GroupColumn is the table column denoting the group relation/edge.
-	GroupColumn = "group_id"
+	GroupColumn = "group_memberships"
 	// UserTable is the table that holds the user relation/edge.
 	UserTable = "group_members"
 	// UserInverseTable is the table name for the User entity.
@@ -48,10 +50,15 @@ const (
 // Columns holds all SQL columns for groupmember fields.
 var Columns = []string{
 	FieldID,
-	FieldGroupID,
 	FieldUserID,
 	FieldRole,
 	FieldJoinedAt,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "group_members"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"group_memberships",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -61,16 +68,21 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
 
 var (
-	// GroupIDValidator is a validator for the "group_id" field. It is called by the builders before save.
-	GroupIDValidator func(string) error
 	// UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	UserIDValidator func(string) error
 	// DefaultJoinedAt holds the default value on creation for the "joined_at" field.
 	DefaultJoinedAt func() time.Time
+	// IDValidator is a validator for the "id" field. It is called by the builders before save.
+	IDValidator func(string) error
 )
 
 // Role defines the type for the "role" enum field.
@@ -107,11 +119,6 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByGroupID orders the results by the group_id field.
-func ByGroupID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldGroupID, opts...).ToFunc()
-}
-
 // ByUserID orders the results by the user_id field.
 func ByUserID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUserID, opts...).ToFunc()
@@ -143,14 +150,14 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 func newGroupStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(GroupInverseTable, FieldID),
+		sqlgraph.To(GroupInverseTable, GroupFieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, GroupTable, GroupColumn),
 	)
 }
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(UserInverseTable, FieldID),
+		sqlgraph.To(UserInverseTable, UserFieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 	)
 }

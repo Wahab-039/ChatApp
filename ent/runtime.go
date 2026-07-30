@@ -97,10 +97,6 @@ func init() {
 	group.IDValidator = groupDescID.Validators[0].(func(string) error)
 	groupmemberFields := schema.GroupMember{}.Fields()
 	_ = groupmemberFields
-	// groupmemberDescGroupID is the schema descriptor for group_id field.
-	groupmemberDescGroupID := groupmemberFields[0].Descriptor()
-	// groupmember.GroupIDValidator is a validator for the "group_id" field. It is called by the builders before save.
-	groupmember.GroupIDValidator = groupmemberDescGroupID.Validators[0].(func(string) error)
 	// groupmemberDescUserID is the schema descriptor for user_id field.
 	groupmemberDescUserID := groupmemberFields[1].Descriptor()
 	// groupmember.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
@@ -109,6 +105,10 @@ func init() {
 	groupmemberDescJoinedAt := groupmemberFields[3].Descriptor()
 	// groupmember.DefaultJoinedAt holds the default value on creation for the joined_at field.
 	groupmember.DefaultJoinedAt = groupmemberDescJoinedAt.Default.(func() time.Time)
+	// groupmemberDescID is the schema descriptor for id field.
+	groupmemberDescID := groupmemberFields[0].Descriptor()
+	// groupmember.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	groupmember.IDValidator = groupmemberDescID.Validators[0].(func(string) error)
 	groupmessageFields := schema.GroupMessage{}.Fields()
 	_ = groupmessageFields
 	// groupmessageDescGroupID is the schema descriptor for group_id field.

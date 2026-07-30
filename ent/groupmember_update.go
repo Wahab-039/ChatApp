@@ -10,10 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Wahab-039/ChatApp/ent/group"
 	"github.com/Wahab-039/ChatApp/ent/groupmember"
 	"github.com/Wahab-039/ChatApp/ent/predicate"
-	"github.com/Wahab-039/ChatApp/ent/user"
 )
 
 // GroupMemberUpdate is the builder for updating GroupMember entities.
@@ -26,34 +24,6 @@ type GroupMemberUpdate struct {
 // Where appends a list predicates to the GroupMemberUpdate builder.
 func (_u *GroupMemberUpdate) Where(ps ...predicate.GroupMember) *GroupMemberUpdate {
 	_u.mutation.Where(ps...)
-	return _u
-}
-
-// SetGroupID sets the "group_id" field.
-func (_u *GroupMemberUpdate) SetGroupID(v string) *GroupMemberUpdate {
-	_u.mutation.SetGroupID(v)
-	return _u
-}
-
-// SetNillableGroupID sets the "group_id" field if the given value is not nil.
-func (_u *GroupMemberUpdate) SetNillableGroupID(v *string) *GroupMemberUpdate {
-	if v != nil {
-		_u.SetGroupID(*v)
-	}
-	return _u
-}
-
-// SetUserID sets the "user_id" field.
-func (_u *GroupMemberUpdate) SetUserID(v string) *GroupMemberUpdate {
-	_u.mutation.SetUserID(v)
-	return _u
-}
-
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (_u *GroupMemberUpdate) SetNillableUserID(v *string) *GroupMemberUpdate {
-	if v != nil {
-		_u.SetUserID(*v)
-	}
 	return _u
 }
 
@@ -71,31 +41,9 @@ func (_u *GroupMemberUpdate) SetNillableRole(v *groupmember.Role) *GroupMemberUp
 	return _u
 }
 
-// SetGroup sets the "group" edge to the Group entity.
-func (_u *GroupMemberUpdate) SetGroup(v *Group) *GroupMemberUpdate {
-	return _u.SetGroupID(v.ID)
-}
-
-// SetUser sets the "user" edge to the User entity.
-func (_u *GroupMemberUpdate) SetUser(v *User) *GroupMemberUpdate {
-	return _u.SetUserID(v.ID)
-}
-
 // Mutation returns the GroupMemberMutation object of the builder.
 func (_u *GroupMemberUpdate) Mutation() *GroupMemberMutation {
 	return _u.mutation
-}
-
-// ClearGroup clears the "group" edge to the Group entity.
-func (_u *GroupMemberUpdate) ClearGroup() *GroupMemberUpdate {
-	_u.mutation.ClearGroup()
-	return _u
-}
-
-// ClearUser clears the "user" edge to the User entity.
-func (_u *GroupMemberUpdate) ClearUser() *GroupMemberUpdate {
-	_u.mutation.ClearUser()
-	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -127,16 +75,6 @@ func (_u *GroupMemberUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *GroupMemberUpdate) check() error {
-	if v, ok := _u.mutation.GroupID(); ok {
-		if err := groupmember.GroupIDValidator(v); err != nil {
-			return &ValidationError{Name: "group_id", err: fmt.Errorf(`ent: validator failed for field "GroupMember.group_id": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.UserID(); ok {
-		if err := groupmember.UserIDValidator(v); err != nil {
-			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "GroupMember.user_id": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.Role(); ok {
 		if err := groupmember.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "GroupMember.role": %w`, err)}
@@ -155,7 +93,7 @@ func (_u *GroupMemberUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(groupmember.Table, groupmember.Columns, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(groupmember.Table, groupmember.Columns, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString))
 	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -165,64 +103,6 @@ func (_u *GroupMemberUpdate) sqlSave(ctx context.Context) (_node int, err error)
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(groupmember.FieldRole, field.TypeEnum, value)
-	}
-	if _u.mutation.GroupCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.GroupTable,
-			Columns: []string{groupmember.GroupColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.GroupIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.GroupTable,
-			Columns: []string{groupmember.GroupColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.UserTable,
-			Columns: []string{groupmember.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.UserTable,
-			Columns: []string{groupmember.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -244,34 +124,6 @@ type GroupMemberUpdateOne struct {
 	mutation *GroupMemberMutation
 }
 
-// SetGroupID sets the "group_id" field.
-func (_u *GroupMemberUpdateOne) SetGroupID(v string) *GroupMemberUpdateOne {
-	_u.mutation.SetGroupID(v)
-	return _u
-}
-
-// SetNillableGroupID sets the "group_id" field if the given value is not nil.
-func (_u *GroupMemberUpdateOne) SetNillableGroupID(v *string) *GroupMemberUpdateOne {
-	if v != nil {
-		_u.SetGroupID(*v)
-	}
-	return _u
-}
-
-// SetUserID sets the "user_id" field.
-func (_u *GroupMemberUpdateOne) SetUserID(v string) *GroupMemberUpdateOne {
-	_u.mutation.SetUserID(v)
-	return _u
-}
-
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (_u *GroupMemberUpdateOne) SetNillableUserID(v *string) *GroupMemberUpdateOne {
-	if v != nil {
-		_u.SetUserID(*v)
-	}
-	return _u
-}
-
 // SetRole sets the "role" field.
 func (_u *GroupMemberUpdateOne) SetRole(v groupmember.Role) *GroupMemberUpdateOne {
 	_u.mutation.SetRole(v)
@@ -286,31 +138,9 @@ func (_u *GroupMemberUpdateOne) SetNillableRole(v *groupmember.Role) *GroupMembe
 	return _u
 }
 
-// SetGroup sets the "group" edge to the Group entity.
-func (_u *GroupMemberUpdateOne) SetGroup(v *Group) *GroupMemberUpdateOne {
-	return _u.SetGroupID(v.ID)
-}
-
-// SetUser sets the "user" edge to the User entity.
-func (_u *GroupMemberUpdateOne) SetUser(v *User) *GroupMemberUpdateOne {
-	return _u.SetUserID(v.ID)
-}
-
 // Mutation returns the GroupMemberMutation object of the builder.
 func (_u *GroupMemberUpdateOne) Mutation() *GroupMemberMutation {
 	return _u.mutation
-}
-
-// ClearGroup clears the "group" edge to the Group entity.
-func (_u *GroupMemberUpdateOne) ClearGroup() *GroupMemberUpdateOne {
-	_u.mutation.ClearGroup()
-	return _u
-}
-
-// ClearUser clears the "user" edge to the User entity.
-func (_u *GroupMemberUpdateOne) ClearUser() *GroupMemberUpdateOne {
-	_u.mutation.ClearUser()
-	return _u
 }
 
 // Where appends a list predicates to the GroupMemberUpdate builder.
@@ -355,16 +185,6 @@ func (_u *GroupMemberUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *GroupMemberUpdateOne) check() error {
-	if v, ok := _u.mutation.GroupID(); ok {
-		if err := groupmember.GroupIDValidator(v); err != nil {
-			return &ValidationError{Name: "group_id", err: fmt.Errorf(`ent: validator failed for field "GroupMember.group_id": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.UserID(); ok {
-		if err := groupmember.UserIDValidator(v); err != nil {
-			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "GroupMember.user_id": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.Role(); ok {
 		if err := groupmember.RoleValidator(v); err != nil {
 			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "GroupMember.role": %w`, err)}
@@ -383,7 +203,7 @@ func (_u *GroupMemberUpdateOne) sqlSave(ctx context.Context) (_node *GroupMember
 	if err := _u.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(groupmember.Table, groupmember.Columns, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(groupmember.Table, groupmember.Columns, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString))
 	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "GroupMember.id" for update`)}
@@ -410,64 +230,6 @@ func (_u *GroupMemberUpdateOne) sqlSave(ctx context.Context) (_node *GroupMember
 	}
 	if value, ok := _u.mutation.Role(); ok {
 		_spec.SetField(groupmember.FieldRole, field.TypeEnum, value)
-	}
-	if _u.mutation.GroupCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.GroupTable,
-			Columns: []string{groupmember.GroupColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.GroupIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.GroupTable,
-			Columns: []string{groupmember.GroupColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.UserTable,
-			Columns: []string{groupmember.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   groupmember.UserTable,
-			Columns: []string{groupmember.UserColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &GroupMember{config: _u.config}
 	_spec.Assign = _node.assignValues

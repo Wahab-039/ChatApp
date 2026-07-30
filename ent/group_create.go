@@ -81,14 +81,14 @@ func (_c *GroupCreate) SetCreator(v *User) *GroupCreate {
 }
 
 // AddMembershipIDs adds the "memberships" edge to the GroupMember entity by IDs.
-func (_c *GroupCreate) AddMembershipIDs(ids ...int) *GroupCreate {
+func (_c *GroupCreate) AddMembershipIDs(ids ...string) *GroupCreate {
 	_c.mutation.AddMembershipIDs(ids...)
 	return _c
 }
 
 // AddMemberships adds the "memberships" edges to the GroupMember entity.
 func (_c *GroupCreate) AddMemberships(v ...*GroupMember) *GroupCreate {
-	ids := make([]int, len(v))
+	ids := make([]string, len(v))
 	for i := range v {
 		ids[i] = v[i].ID
 	}
@@ -259,7 +259,7 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Columns: []string{group.MembershipsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

@@ -1,34 +1,44 @@
 package database
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
+	"time"
 
-	"github.com/Wahab-039/ChatApp/ent"
+	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
+	"github.com/Wahab-039/ChatApp/ent"
+
 	// pgx stdlib registers the "pgx" driver name for database/sql
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// NewEntClient creates a new Ent client connected to PostgreSQL.
-// It uses the pgx v5 stdlib driver so Ent can talk to the same
-// database as your existing pgxpool, without needing a second DSN.
-func NewEntClient(databaseURL string) (*ent.Client, error) {
-	// Open a database/sql connection using the pgx stdlib driver.
-	// entsql.Open wraps it in Ent's dialect.Driver interface.
-	drv, err := entsql.Open("pgx", databaseURL)
+const pingTimeout = 5 * time.Second
+
+// NewEntClient creates a new Ent client and returns it along with the
+// underlying *sql.DB. The *sql.DB is needed for repositories that cannot
+// use Ent's query builders (e.g. tables without a surrogate id column).
+func NewEntClient(databaseURL string) (*ent.Client, *sql.DB, error) {
+	sqlDB, err := sql.Open("pgx", databaseURL)
 	if err != nil {
-		return nil, fmt.Errorf("open ent driver: %w", err)
+		return nil, nil, fmt.Errorf("open sql connection: %w", err)
 	}
 
-	// Configure the underlying *sql.DB connection pool.
-	// These numbers match your existing pgxpool settings.
-	sqlDB := drv.DB()
 	sqlDB.SetMaxOpenConns(25)
 	sqlDB.SetMaxIdleConns(5)
 
-	// Wrap the driver in the Ent client.
-	// ent.Driver(drv) injects our configured driver instead of the default.
+	ctx, cancel := context.WithTimeout(context.Background(), pingTimeout)
+	defer cancel()
+	if err := sqlDB.PingContext(ctx); err != nil {
+		_ = sqlDB.Close()
+		return nil, nil, fmt.Errorf("ping database: %w", err)
+	}
+
+	// Explicitly declare Postgres dialect so Ent generates $1/$2 placeholders
+	// and double-quoted identifiers instead of MySQL-style ? and backticks.
+	drv := entsql.OpenDB(dialect.Postgres, sqlDB)
 	client := ent.NewClient(ent.Driver(drv))
 
-	return client, nil
+	return client, sqlDB, nil
 }

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"database/sql"
+
 	"github.com/Wahab-039/ChatApp/api/handlers/auth"
 	"github.com/Wahab-039/ChatApp/api/handlers/groupmessages"
 	"github.com/Wahab-039/ChatApp/api/handlers/groups"
@@ -10,7 +12,6 @@ import (
 	"github.com/Wahab-039/ChatApp/api/routes"
 	"github.com/Wahab-039/ChatApp/ent"
 	"github.com/Wahab-039/ChatApp/internal/config"
-	"github.com/Wahab-039/ChatApp/internal/database"
 	appmqtt "github.com/Wahab-039/ChatApp/internal/mqtt"
 	groupmessagerepository "github.com/Wahab-039/ChatApp/internal/repositories/groupmessages"
 	grouprepository "github.com/Wahab-039/ChatApp/internal/repositories/groups"
@@ -25,16 +26,16 @@ import (
 )
 
 // newRouter wires up all dependencies and returns a configured gin router.
-// conn is the existing pgx pool (used by current repositories).
-// entClient is the Ent ORM client — repositories will be migrated to use it in Phase 5.
-func newRouter(conn *database.Postgres, entClient *ent.Client, cfg *config.Config, publisher *appmqtt.Publisher) *gin.Engine {
+// entClient is the Ent ORM client used by all repositories.
+// sqlDB is the underlying *sql.DB passed to repositories that need raw SQL
+// (specifically groups, whose group_members table has no surrogate id column).
+func newRouter(entClient *ent.Client, sqlDB *sql.DB, cfg *config.Config, publisher *appmqtt.Publisher) *gin.Engine {
 	router := gin.Default()
 
-	// TODO Phase 5: swap these one by one to NewEntRepository(entClient)
-	userRepository := userrepository.NewPostgresRepository(conn.Pool)
-	messageRepository := messagerepository.NewPostgresRepository(conn.Pool)
-	groupRepository := grouprepository.NewPostgresRepository(conn.Pool)
-	groupMessageRepository := groupmessagerepository.NewPostgresRepository(conn.Pool)
+	userRepository := userrepository.NewEntRepository(entClient)
+	messageRepository := messagerepository.NewEntRepository(entClient)
+	groupRepository := grouprepository.NewEntRepository(entClient)
+	groupMessageRepository := groupmessagerepository.NewEntRepository(entClient)
 	tokenManager := authservice.NewTokenManager(cfg.JWTSecret, cfg.JWTAccessTTL)
 	authService := authservice.NewService(userRepository, tokenManager)
 	userService := userservice.NewService(userRepository)

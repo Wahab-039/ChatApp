@@ -22,12 +22,6 @@ type GroupMemberCreate struct {
 	hooks    []Hook
 }
 
-// SetGroupID sets the "group_id" field.
-func (_c *GroupMemberCreate) SetGroupID(v string) *GroupMemberCreate {
-	_c.mutation.SetGroupID(v)
-	return _c
-}
-
 // SetUserID sets the "user_id" field.
 func (_c *GroupMemberCreate) SetUserID(v string) *GroupMemberCreate {
 	_c.mutation.SetUserID(v)
@@ -59,6 +53,18 @@ func (_c *GroupMemberCreate) SetNillableJoinedAt(v *time.Time) *GroupMemberCreat
 	if v != nil {
 		_c.SetJoinedAt(*v)
 	}
+	return _c
+}
+
+// SetID sets the "id" field.
+func (_c *GroupMemberCreate) SetID(v string) *GroupMemberCreate {
+	_c.mutation.SetID(v)
+	return _c
+}
+
+// SetGroupID sets the "group" edge to the Group entity by ID.
+func (_c *GroupMemberCreate) SetGroupID(id string) *GroupMemberCreate {
+	_c.mutation.SetGroupID(id)
 	return _c
 }
 
@@ -119,14 +125,6 @@ func (_c *GroupMemberCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *GroupMemberCreate) check() error {
-	if _, ok := _c.mutation.GroupID(); !ok {
-		return &ValidationError{Name: "group_id", err: errors.New(`ent: missing required field "GroupMember.group_id"`)}
-	}
-	if v, ok := _c.mutation.GroupID(); ok {
-		if err := groupmember.GroupIDValidator(v); err != nil {
-			return &ValidationError{Name: "group_id", err: fmt.Errorf(`ent: validator failed for field "GroupMember.group_id": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "GroupMember.user_id"`)}
 	}
@@ -145,6 +143,11 @@ func (_c *GroupMemberCreate) check() error {
 	}
 	if _, ok := _c.mutation.JoinedAt(); !ok {
 		return &ValidationError{Name: "joined_at", err: errors.New(`ent: missing required field "GroupMember.joined_at"`)}
+	}
+	if v, ok := _c.mutation.ID(); ok {
+		if err := groupmember.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "GroupMember.id": %w`, err)}
+		}
 	}
 	if len(_c.mutation.GroupIDs()) == 0 {
 		return &ValidationError{Name: "group", err: errors.New(`ent: missing required edge "GroupMember.group"`)}
@@ -166,8 +169,13 @@ func (_c *GroupMemberCreate) sqlSave(ctx context.Context) (*GroupMember, error) 
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected GroupMember.ID type: %T", _spec.ID.Value)
+		}
+	}
 	_c.mutation.id = &_node.ID
 	_c.mutation.done = true
 	return _node, nil
@@ -176,8 +184,12 @@ func (_c *GroupMemberCreate) sqlSave(ctx context.Context) (*GroupMember, error) 
 func (_c *GroupMemberCreate) createSpec() (*GroupMember, *sqlgraph.CreateSpec) {
 	var (
 		_node = &GroupMember{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(groupmember.Table, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(groupmember.Table, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString))
 	)
+	if id, ok := _c.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := _c.mutation.Role(); ok {
 		_spec.SetField(groupmember.FieldRole, field.TypeEnum, value)
 		_node.Role = value
@@ -200,7 +212,7 @@ func (_c *GroupMemberCreate) createSpec() (*GroupMember, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.GroupID = nodes[0]
+		_node.group_memberships = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
@@ -268,10 +280,6 @@ func (_c *GroupMemberCreateBulk) Save(ctx context.Context) ([]*GroupMember, erro
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

@@ -86,10 +86,10 @@ var (
 	}
 	// GroupMembersColumns holds the columns for the "group_members" table.
 	GroupMembersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "group_id", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "member"}, Default: "member"},
 		{Name: "joined_at", Type: field.TypeTime},
-		{Name: "group_id", Type: field.TypeString},
+		{Name: "group_memberships", Type: field.TypeString},
 		{Name: "user_id", Type: field.TypeString},
 	}
 	// GroupMembersTable holds the schema information for the "group_members" table.
@@ -115,7 +115,7 @@ var (
 			{
 				Name:    "groupmember_group_id_user_id",
 				Unique:  true,
-				Columns: []*schema.Column{GroupMembersColumns[3], GroupMembersColumns[4]},
+				Columns: []*schema.Column{GroupMembersColumns[0], GroupMembersColumns[4]},
 			},
 			{
 				Name:    "groupmember_user_id",
@@ -125,7 +125,7 @@ var (
 			{
 				Name:    "groupmember_group_id",
 				Unique:  false,
-				Columns: []*schema.Column{GroupMembersColumns[3]},
+				Columns: []*schema.Column{GroupMembersColumns[0]},
 			},
 		},
 	}

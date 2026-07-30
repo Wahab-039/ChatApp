@@ -32,6 +32,8 @@ const (
 	EdgeMemberships = "memberships"
 	// EdgeSentGroupMessages holds the string denoting the sent_group_messages edge name in mutations.
 	EdgeSentGroupMessages = "sent_group_messages"
+	// GroupMemberFieldID holds the string denoting the ID field of the GroupMember.
+	GroupMemberFieldID = "group_id"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// SentMessagesTable is the table that holds the sent_messages relation/edge.
@@ -226,7 +228,7 @@ func newCreatedGroupsStep() *sqlgraph.Step {
 func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(MembershipsInverseTable, FieldID),
+		sqlgraph.To(MembershipsInverseTable, GroupMemberFieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
 	)
 }

@@ -28,6 +28,8 @@ const (
 	EdgeMemberships = "memberships"
 	// EdgeMessages holds the string denoting the messages edge name in mutations.
 	EdgeMessages = "messages"
+	// GroupMemberFieldID holds the string denoting the ID field of the GroupMember.
+	GroupMemberFieldID = "group_id"
 	// Table holds the table name of the group in the database.
 	Table = "groups"
 	// CreatorTable is the table that holds the creator relation/edge.
@@ -43,7 +45,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "groupmember" package.
 	MembershipsInverseTable = "group_members"
 	// MembershipsColumn is the table column denoting the memberships relation/edge.
-	MembershipsColumn = "group_id"
+	MembershipsColumn = "group_memberships"
 	// MessagesTable is the table that holds the messages relation/edge.
 	MessagesTable = "group_messages"
 	// MessagesInverseTable is the table name for the GroupMessage entity.
@@ -159,7 +161,7 @@ func newCreatorStep() *sqlgraph.Step {
 func newMembershipsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(MembershipsInverseTable, FieldID),
+		sqlgraph.To(MembershipsInverseTable, GroupMemberFieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, MembershipsTable, MembershipsColumn),
 	)
 }

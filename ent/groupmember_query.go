@@ -26,6 +26,7 @@ type GroupMemberQuery struct {
 	predicates []predicate.GroupMember
 	withGroup  *GroupQuery
 	withUser   *UserQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -130,8 +131,8 @@ func (_q *GroupMemberQuery) FirstX(ctx context.Context) *GroupMember {
 
 // FirstID returns the first GroupMember ID from the query.
 // Returns a *NotFoundError when no GroupMember ID was found.
-func (_q *GroupMemberQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (_q *GroupMemberQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -143,7 +144,7 @@ func (_q *GroupMemberQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *GroupMemberQuery) FirstIDX(ctx context.Context) int {
+func (_q *GroupMemberQuery) FirstIDX(ctx context.Context) string {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -181,8 +182,8 @@ func (_q *GroupMemberQuery) OnlyX(ctx context.Context) *GroupMember {
 // OnlyID is like Only, but returns the only GroupMember ID in the query.
 // Returns a *NotSingularError when more than one GroupMember ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *GroupMemberQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (_q *GroupMemberQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -198,7 +199,7 @@ func (_q *GroupMemberQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *GroupMemberQuery) OnlyIDX(ctx context.Context) int {
+func (_q *GroupMemberQuery) OnlyIDX(ctx context.Context) string {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -226,7 +227,7 @@ func (_q *GroupMemberQuery) AllX(ctx context.Context) []*GroupMember {
 }
 
 // IDs executes the query and returns a list of GroupMember IDs.
-func (_q *GroupMemberQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (_q *GroupMemberQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
@@ -238,7 +239,7 @@ func (_q *GroupMemberQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *GroupMemberQuery) IDsX(ctx context.Context) []int {
+func (_q *GroupMemberQuery) IDsX(ctx context.Context) []string {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -334,12 +335,12 @@ func (_q *GroupMemberQuery) WithUser(opts ...func(*UserQuery)) *GroupMemberQuery
 // Example:
 //
 //	var v []struct {
-//		GroupID string `json:"group_id,omitempty"`
+//		UserID string `json:"user_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.GroupMember.Query().
-//		GroupBy(groupmember.FieldGroupID).
+//		GroupBy(groupmember.FieldUserID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *GroupMemberQuery) GroupBy(field string, fields ...string) *GroupMemberGroupBy {
@@ -357,11 +358,11 @@ func (_q *GroupMemberQuery) GroupBy(field string, fields ...string) *GroupMember
 // Example:
 //
 //	var v []struct {
-//		GroupID string `json:"group_id,omitempty"`
+//		UserID string `json:"user_id,omitempty"`
 //	}
 //
 //	client.GroupMember.Query().
-//		Select(groupmember.FieldGroupID).
+//		Select(groupmember.FieldUserID).
 //		Scan(ctx, &v)
 func (_q *GroupMemberQuery) Select(fields ...string) *GroupMemberSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
@@ -405,12 +406,19 @@ func (_q *GroupMemberQuery) prepareQuery(ctx context.Context) error {
 func (_q *GroupMemberQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*GroupMember, error) {
 	var (
 		nodes       = []*GroupMember{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
 			_q.withGroup != nil,
 			_q.withUser != nil,
 		}
 	)
+	if _q.withGroup != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, groupmember.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*GroupMember).scanValues(nil, columns)
 	}
@@ -448,7 +456,10 @@ func (_q *GroupMemberQuery) loadGroup(ctx context.Context, query *GroupQuery, no
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*GroupMember)
 	for i := range nodes {
-		fk := nodes[i].GroupID
+		if nodes[i].group_memberships == nil {
+			continue
+		}
+		fk := *nodes[i].group_memberships
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -465,7 +476,7 @@ func (_q *GroupMemberQuery) loadGroup(ctx context.Context, query *GroupQuery, no
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "group_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "group_memberships" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -513,7 +524,7 @@ func (_q *GroupMemberQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (_q *GroupMemberQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(groupmember.Table, groupmember.Columns, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(groupmember.Table, groupmember.Columns, sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeString))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -527,9 +538,6 @@ func (_q *GroupMemberQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != groupmember.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if _q.withGroup != nil {
-			_spec.Node.AddColumnOnce(groupmember.FieldGroupID)
 		}
 		if _q.withUser != nil {
 			_spec.Node.AddColumnOnce(groupmember.FieldUserID)

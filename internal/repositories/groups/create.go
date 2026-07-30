@@ -13,7 +13,7 @@ func (r *PostgresRepository) Create(ctx context.Context, name, createdBy string)
 	if err != nil {
 		return models.Group{}, fmt.Errorf("begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	const createGroupQuery = `
 		INSERT INTO groups (name, created_by)

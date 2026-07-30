@@ -11,53 +11,58 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.GroupMember {
+func ID(id string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.GroupMember {
+func IDEQ(id string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.GroupMember {
+func IDNEQ(id string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.GroupMember {
+func IDIn(ids ...string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.GroupMember {
+func IDNotIn(ids ...string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.GroupMember {
+func IDGT(id string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.GroupMember {
+func IDGTE(id string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.GroupMember {
+func IDLT(id string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.GroupMember {
+func IDLTE(id string) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldLTE(FieldID, id))
 }
 
-// GroupID applies equality check predicate on the "group_id" field. It's identical to GroupIDEQ.
-func GroupID(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldEQ(FieldGroupID, v))
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.GroupMember {
+	return predicate.GroupMember(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.GroupMember {
+	return predicate.GroupMember(sql.FieldContainsFold(FieldID, id))
 }
 
 // UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
@@ -68,71 +73,6 @@ func UserID(v string) predicate.GroupMember {
 // JoinedAt applies equality check predicate on the "joined_at" field. It's identical to JoinedAtEQ.
 func JoinedAt(v time.Time) predicate.GroupMember {
 	return predicate.GroupMember(sql.FieldEQ(FieldJoinedAt, v))
-}
-
-// GroupIDEQ applies the EQ predicate on the "group_id" field.
-func GroupIDEQ(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldEQ(FieldGroupID, v))
-}
-
-// GroupIDNEQ applies the NEQ predicate on the "group_id" field.
-func GroupIDNEQ(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldNEQ(FieldGroupID, v))
-}
-
-// GroupIDIn applies the In predicate on the "group_id" field.
-func GroupIDIn(vs ...string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldIn(FieldGroupID, vs...))
-}
-
-// GroupIDNotIn applies the NotIn predicate on the "group_id" field.
-func GroupIDNotIn(vs ...string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldNotIn(FieldGroupID, vs...))
-}
-
-// GroupIDGT applies the GT predicate on the "group_id" field.
-func GroupIDGT(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldGT(FieldGroupID, v))
-}
-
-// GroupIDGTE applies the GTE predicate on the "group_id" field.
-func GroupIDGTE(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldGTE(FieldGroupID, v))
-}
-
-// GroupIDLT applies the LT predicate on the "group_id" field.
-func GroupIDLT(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldLT(FieldGroupID, v))
-}
-
-// GroupIDLTE applies the LTE predicate on the "group_id" field.
-func GroupIDLTE(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldLTE(FieldGroupID, v))
-}
-
-// GroupIDContains applies the Contains predicate on the "group_id" field.
-func GroupIDContains(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldContains(FieldGroupID, v))
-}
-
-// GroupIDHasPrefix applies the HasPrefix predicate on the "group_id" field.
-func GroupIDHasPrefix(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldHasPrefix(FieldGroupID, v))
-}
-
-// GroupIDHasSuffix applies the HasSuffix predicate on the "group_id" field.
-func GroupIDHasSuffix(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldHasSuffix(FieldGroupID, v))
-}
-
-// GroupIDEqualFold applies the EqualFold predicate on the "group_id" field.
-func GroupIDEqualFold(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldEqualFold(FieldGroupID, v))
-}
-
-// GroupIDContainsFold applies the ContainsFold predicate on the "group_id" field.
-func GroupIDContainsFold(v string) predicate.GroupMember {
-	return predicate.GroupMember(sql.FieldContainsFold(FieldGroupID, v))
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
