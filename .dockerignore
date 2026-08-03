@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Environment files (use docker-compose env instead)
+.env
+.env.*
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+ChatApp
+tmp/
+*.log
+
+# Test files
+*_test.go
+testdata/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Scripts (keep entrypoint, exclude others)
+scripts/
+
+# Deployment configs (exclude but allow api entrypoint)
+deploy/emqx/
+deploy/postgres/

@@ -16,3 +16,4 @@ migrate-status:
 
 migration:
 	goose -dir $(MIGRATIONS_DIR) create $(name) sql
+

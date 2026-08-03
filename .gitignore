@@ -10,6 +10,21 @@
 *.test
 *.out
 
+# Binary files (compiled executables)
+bin/
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# Linux/Unix binaries (no extension)
+# Any file without extension in root or bin/
+/chat-app
+/ChatApp
+/chatapp
+/main
+
 # Coverage and profiling output
 coverage.out
 *.coverprofile
@@ -22,3 +37,9 @@ coverage.out
 *.swo
 *~
 .DS_Store
+
+# Kubernetes/Minikube binaries (should not be in project)
+kubectl
+minikube
+minikube-linux-amd64
+kubectl-linux-amd64

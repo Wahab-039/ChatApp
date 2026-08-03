@@ -1,12 +1,33 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chatapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - chatapp-network
+
   emqx:
     image: emqx/emqx:5.8.6
     container_name: chatapp-emqx
     restart: unless-stopped
     ports:
-      - "1883:1883"       # MQTT TCP (future Go publisher)
-      - "8083:8083"       # MQTT over WebSocket
-      - "18083:18083"     # Dashboard / management API
+      - "1884:1883"       # MQTT TCP (Go publisher)
+      - "8084:8083"       # MQTT over WebSocket
+      - "18084:18083"     # Dashboard / management API
     env_file:
       - .env
     environment:
@@ -41,7 +62,42 @@ services:
       timeout: 10s
       retries: 12
       start_period: 40s
+    networks:
+      - chatapp-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatapp-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      emqx:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Override with Docker service names
+      DB_HOST: postgres
+      EMQX_MQTT_TCP_URL: tcp://emqx:1883
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - chatapp-network
+
+networks:
+  chatapp-network:
+    driver: bridge
 
 volumes:
+  postgres-data:
   emqx-data:
   emqx-log:

@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emqx
+  namespace: chatapp
+  labels:
+    app: emqx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emqx
+  template:
+    metadata:
+      labels:
+        app: emqx
+    spec:
+      containers:
+      - name: emqx
+        image: emqx/emqx:5.8.4
+        ports:
+        - containerPort: 1883
+          name: mqtt
+        - containerPort: 8083
+          name: ws
+        - containerPort: 18083
+          name: dashboard
+        env:
+        - name: EMQX_NAME
+          value: "emqx"
+        - name: EMQX_HOST
+          value: "127.0.0.1"
+        volumeMounts:
+        - name: emqx-data
+          mountPath: /opt/emqx/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: 18083
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: 18083
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: emqx-data
+        persistentVolumeClaim:
+          claimName: emqx-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emqx-service
+  namespace: chatapp
+spec:
+  selector:
+    app: emqx
+  ports:
+  - name: mqtt
+    port: 1883
+    targetPort: 1883
+    protocol: TCP
+  - name: ws
+    port: 8083
+    targetPort: 8083
+    protocol: TCP
+  - name: dashboard
+    port: 18083
+    targetPort: 18083
+    protocol: TCP
+  type: ClusterIP
