@@ -115,17 +115,3 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "250m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: chatapp-api-service
-  namespace: chatapp
-spec:
-  selector:
-    app: chatapp-api
-  ports:
-  - port: 8080
-    targetPort: 8080
-    protocol: TCP
-  type: ClusterIP

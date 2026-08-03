@@ -6,8 +6,6 @@ namespace: chatapp
 resources:
   - configmap.yaml
   - secret.yaml
-  - postgres-pvc.yaml
-  - emqx-pvc.yaml
-  - postgres-deployment.yaml
-  - emqx-deployment.yaml
-  - api-deployment.yaml
+  - ../database/base
+  - ../emqx/base
+  - ../backend/base
