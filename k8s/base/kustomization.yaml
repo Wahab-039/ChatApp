@@ -9,3 +9,4 @@ resources:
   - ../database/base
   - ../emqx/base
   - ../backend/base
+  - ../ingress/base

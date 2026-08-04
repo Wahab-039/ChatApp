@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/Wahab-039/ChatApp/api/middleware"
-	"github.com/Wahab-039/ChatApp/internal/models"
 	messagesservice "github.com/Wahab-039/ChatApp/internal/services/messages"
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +12,6 @@ import (
 type sendDirectRequest struct {
 	RecipientUsername string `json:"recipient_username"`
 	Body              string `json:"body"`
-	ClientMessageID   string `json:"client_message_id"`
 }
 
 // SendDirect persists a DM and publishes it to the recipient inbox.
@@ -26,7 +24,7 @@ func (h *Handler) SendDirect(c *gin.Context) {
 
 	var request sendDirectRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "recipient_username, body, and client_message_id are required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "recipient_username and body are required"})
 		return
 	}
 
@@ -35,7 +33,6 @@ func (h *Handler) SendDirect(c *gin.Context) {
 		identity.UserID,
 		request.RecipientUsername,
 		request.Body,
-		request.ClientMessageID,
 	)
 	if err != nil {
 		h.writeMessageError(c, err, true)
@@ -43,9 +40,6 @@ func (h *Handler) SendDirect(c *gin.Context) {
 	}
 
 	status := http.StatusCreated
-	if !result.Created {
-		status = http.StatusOK
-	}
 
 	c.JSON(status, gin.H{
 		"message": result.Message,
@@ -95,15 +89,12 @@ func (h *Handler) writeMessageError(c *gin.Context, err error, sending bool) {
 	case errors.Is(err, messagesservice.ErrRecipientRequired),
 		errors.Is(err, messagesservice.ErrPeerRequired),
 		errors.Is(err, messagesservice.ErrInvalidBody),
-		errors.Is(err, messagesservice.ErrInvalidClientMessageID),
 		errors.Is(err, messagesservice.ErrCannotMessageSelf),
 		errors.Is(err, messagesservice.ErrInvalidCursor),
 		errors.Is(err, messagesservice.ErrInvalidLimit):
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	case errors.Is(err, messagesservice.ErrRecipientNotFound):
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-	case sending && errors.Is(err, models.ErrDuplicateClientMessage):
-		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 	default:
 		if sending {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "unable to send message"})

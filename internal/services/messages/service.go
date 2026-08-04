@@ -11,13 +11,12 @@ import (
 )
 
 const (
-	maxBodyLength            = 4000
-	maxClientMessageIDLength = 128
+	maxBodyLength = 4000
 )
 
 // ServiceInterface defines direct-message use cases.
 type ServiceInterface interface {
-	SendDirect(ctx context.Context, senderID, recipientUsername, body, clientMessageID string) (SendResult, error)
+	SendDirect(ctx context.Context, senderID, recipientUsername, body string) (SendResult, error)
 	ListDirect(ctx context.Context, requesterID string, query HistoryQuery) (HistoryResult, error)
 }
 

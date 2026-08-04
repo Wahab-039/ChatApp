@@ -3,8 +3,10 @@ package messages
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/Wahab-039/ChatApp/internal/models"
@@ -14,7 +16,7 @@ import (
 // SendDirect validates, persists, and publishes a direct message.
 func (s *Service) SendDirect(
 	ctx context.Context,
-	senderID, recipientUsername, body, clientMessageID string,
+	senderID, recipientUsername, body string,
 ) (SendResult, error) {
 	normalizedRecipient, err := normalizeRecipientUsername(recipientUsername)
 	if err != nil {
@@ -22,16 +24,6 @@ func (s *Service) SendDirect(
 	}
 	normalizedBody, err := normalizeBody(body)
 	if err != nil {
-		return SendResult{}, err
-	}
-	normalizedClientID, err := normalizeClientMessageID(clientMessageID)
-	if err != nil {
-		return SendResult{}, err
-	}
-
-	if existing, err := s.messages.FindBySenderAndClientMessageID(ctx, senderID, normalizedClientID); err == nil {
-		return SendResult{Message: existing, Created: false}, nil
-	} else if err != nil && !errors.Is(err, models.ErrMessageNotFound) {
 		return SendResult{}, err
 	}
 
@@ -46,14 +38,11 @@ func (s *Service) SendDirect(
 		return SendResult{}, ErrCannotMessageSelf
 	}
 
-	message, err := s.messages.Create(ctx, senderID, recipient.ID, normalizedBody, normalizedClientID)
+	// Generate a unique client message ID internally
+	clientMessageID := fmt.Sprintf("%d-%s", time.Now().UnixNano(), senderID[:8])
+
+	message, err := s.messages.Create(ctx, senderID, recipient.ID, normalizedBody, clientMessageID)
 	if err != nil {
-		if errors.Is(err, models.ErrDuplicateClientMessage) {
-			existing, findErr := s.messages.FindBySenderAndClientMessageID(ctx, senderID, normalizedClientID)
-			if findErr == nil {
-				return SendResult{Message: existing, Created: false}, nil
-			}
-		}
 		return SendResult{}, err
 	}
 
@@ -72,12 +61,9 @@ func (s *Service) publishNewMessage(ctx context.Context, message models.DirectMe
 		Type:      appmqtt.EventTypeMessageNew,
 		RequestID: message.ClientMessageID,
 		Payload: map[string]any{
-			"id":                message.ID,
-			"sender_id":         message.SenderID,
-			"recipient_id":      message.RecipientID,
-			"body":              message.Body,
-			"client_message_id": message.ClientMessageID,
-			"created_at":        message.CreatedAt.UTC().Format("2006-01-02T15:04:05.000Z07:00"),
+			"sender_id":   message.SenderID,
+			"body":        message.Body,
+			"received_at": time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 		},
 	})
 }
@@ -97,14 +83,6 @@ func normalizeBody(body string) (string, error) {
 	}
 	if utf8.RuneCountInString(normalized) > maxBodyLength {
 		return "", ErrInvalidBody
-	}
-	return normalized, nil
-}
-
-func normalizeClientMessageID(clientMessageID string) (string, error) {
-	normalized := strings.TrimSpace(clientMessageID)
-	if normalized == "" || len(normalized) > maxClientMessageIDLength {
-		return "", ErrInvalidClientMessageID
 	}
 	return normalized, nil
 }
